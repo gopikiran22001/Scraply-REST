@@ -7,6 +7,8 @@ import com.scraply.rest.models.enums.AuthProvider;
 import com.scraply.rest.models.enums.Role;
 import com.scraply.rest.repositories.UserRepository;
 import com.scraply.rest.services.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,19 +35,26 @@ public class AuthService {
     public ResponseEntity<?> register(RegisterRequest request) {
         log.info("Registering user with email: {}", request.getEmail());
 
-        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        Optional<User> existingUser = userRepository
+                                        .findByEmail(request.getEmail());
 
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             log.warn("Registration failed: email already exists {}", request.getEmail());
             if(user.getRole()==Role.PICKER && user.getStatus() != AccountStatus.ACCEPTED) {
                 if(user.getStatus() == AccountStatus.PENDING)
-                    return ResponseEntity.badRequest().body("Account Verification is Still Pending!");
+                    return ResponseEntity
+                            .badRequest()
+                            .body("Account Verification is Still Pending!");
                 else
-                    return ResponseEntity.badRequest().body("Account Verification is Rejected!");
+                    return ResponseEntity
+                            .badRequest()
+                            .body("Account Verification is Rejected!");
             }
 
-            return ResponseEntity.badRequest().body("Email already exists");
+            return ResponseEntity
+                    .badRequest()
+                    .body("Email already exists");
         }
 
         User user = User.builder()
@@ -62,8 +71,13 @@ public class AuthService {
         }
 
         if(user.getRole() == Role.PICKER){
-            if(request.getAddress() == null || request.getVehicleType() == null || request.getPickUpRoute() == null)
-                return ResponseEntity.badRequest().body("Address, vehicle type and government ID are required for picker");
+            if(request.getAddress() == null
+                    || request.getVehicleType() == null
+                    || request.getPickUpRoute() == null ) {
+                return ResponseEntity
+                        .badRequest()
+                        .body("Address, vehicle type and government ID are required for picker");
+            }
 
             user.setAddress(request.getAddress());
             user.setVehicleType(request.getVehicleType());
@@ -77,18 +91,22 @@ public class AuthService {
 
         log.info("User registered successfully: {}", user.getEmail());
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity
+                .ok("User registered successfully");
     }
 
-    public ResponseEntity<?> login(LoginRequest request) {
-        log.info("Logging in user with email: {}", request.getEmail());
+    public ResponseEntity<?> mobileLogin(LoginRequest request) {
+        log.info("Logging in MOBILE user with email: {}", request.getEmail());
 
 
-        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        Optional<User> userOptional = userRepository
+                                        .findByEmail(request.getEmail());
 
         if (userOptional.isEmpty()) {
             log.warn("Login failed: user not found with email {}", request.getEmail());
-            return ResponseEntity.badRequest().body("Invalid credentials");
+            return ResponseEntity
+                    .badRequest()
+                    .body("Invalid credentials");
         }
 
         try {
@@ -100,13 +118,16 @@ public class AuthService {
             );
         } catch (Exception e) {
             log.warn("Login failed: invalid password for {}", request.getEmail());
-            return ResponseEntity.badRequest().body("Invalid credentials");
+            return ResponseEntity
+                    .badRequest()
+                    .body("Invalid credentials");
         }
 
         User user = userOptional.get();
 
         // Picker approval check
-        if(user.getRole() == Role.PICKER && user.getStatus() != AccountStatus.ACCEPTED){
+        if(user.getRole() == Role.PICKER
+                && user.getStatus() != AccountStatus.ACCEPTED ) {
             return ResponseEntity.badRequest().body("Your account is not approved yet!" );
         }
 
@@ -114,8 +135,10 @@ public class AuthService {
         String token = jwtService.generateToken(
                 new org.springframework.security.core.userdetails.User(
                         user.getEmail(),
-                        user.getPassword(),
-                        java.util.List.of()
+                        "",
+                        java.util.List.of(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                        )
                 ),
                 user.getRole().name()
         );
@@ -125,15 +148,88 @@ public class AuthService {
                 .token(token)
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .name(user.getName())
+                .build());
+    }
+
+    public ResponseEntity<?> webLogin(
+            LoginRequest request,
+            HttpServletResponse response ) {
+        log.info("Logging in WEB user with email: {}", request.getEmail());
+
+
+        Optional<User> userOptional = userRepository
+                                        .findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) {
+            log.warn("Login failed: user not found with email {}", request.getEmail());
+            return ResponseEntity
+                    .badRequest()
+                    .body("Invalid credentials");
+        }
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (Exception e) {
+            log.warn("Login failed: invalid password for {}", request.getEmail());
+            return ResponseEntity
+                    .badRequest()
+                    .body("Invalid credentials");
+        }
+
+        User user = userOptional.get();
+
+        // Picker approval check
+        if(user.getRole() == Role.PICKER
+                && user.getStatus() != AccountStatus.ACCEPTED ){
+            return ResponseEntity
+                    .badRequest()
+                    .body("Your account is not approved yet!" );
+        }
+
+        // Generate JWT
+        String token = jwtService.generateToken(
+                new org.springframework.security.core.userdetails.User(
+                        user.getEmail(),
+                        "",
+                        java.util.List.of(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                        )
+                ),
+                user.getRole().name()
+        );
+
+        Cookie cookie = new Cookie("jwt", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // use https
+        cookie.setPath("/");
+        cookie.setMaxAge(200 * 24 * 60 * 60);
+
+        response.addCookie(cookie);
+
+        // Return response
+        return ResponseEntity
+                .ok(AuthResponse.builder()
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .name(user.getName())
                 .build());
     }
 
     public ResponseEntity<?> profile(String email) {
         try {
-            Optional<User> optionalUser = userRepository.findByEmail(email);
+            Optional<User> optionalUser = userRepository
+                                            .findByEmail(email);
 
             if(optionalUser.isEmpty()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity
+                        .notFound()
+                        .build();
             }
 
             User user = optionalUser.get();
@@ -150,16 +246,21 @@ public class AuthService {
                     .status(user.getStatus().name())
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity
+                    .internalServerError()
+                    .build();
         }
     }
 
-    public ResponseEntity<?> updateProfile(String email, ProfileUpdateRequest profileUpdateRequest) {
+    public ResponseEntity<?> updateProfile(String email, ProfileUpdateRequest profileUpdateRequest ) {
         try {
-            Optional<User> optionalUser = userRepository.findByEmail(email);
+            Optional<User> optionalUser = userRepository
+                                            .findByEmail(email);
 
             if (optionalUser.isEmpty()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity
+                        .notFound()
+                        .build();
             }
 
             User user = optionalUser.get();
@@ -184,28 +285,41 @@ public class AuthService {
 
             if(profileUpdateRequest.getPassword() != null) {
                 if(profileUpdateRequest.getPassword().trim().length() < 6)
-                    return ResponseEntity.badRequest().body("Password must be at least 6 characters long");
+                    return ResponseEntity
+                            .badRequest()
+                            .body("Password must be at least 6 characters long");
                 user.setPassword(passwordEncoder.encode(profileUpdateRequest.getPassword()));
             }
 
             if(profileUpdateRequest.getEmail()!=null) {
                 if(profileUpdateRequest.getEmail().equals(user.getEmail())) {
-                    return ResponseEntity.badRequest().body("New email cannot be same as old email");
+                    return ResponseEntity
+                            .badRequest()
+                            .body("New email cannot be same as old email");
                 }
 
-                Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+                Optional<User> existingUser = userRepository
+                                                .findByEmail(profileUpdateRequest.getEmail());
 
                 if(existingUser.isPresent()) {
-                    return ResponseEntity.badRequest().body("Email already exists");
+                    return ResponseEntity
+                            .badRequest()
+                            .body("Email already exists");
                 }
 
                 user.setEmail(profileUpdateRequest.getEmail());
             }
+
             userRepository.save(user);
-            return ResponseEntity.ok("Profile updated successfully");
+
+            return ResponseEntity
+                    .ok("Profile updated successfully");
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity
+                    .internalServerError()
+                    .build();
         }
     }
+
 }
