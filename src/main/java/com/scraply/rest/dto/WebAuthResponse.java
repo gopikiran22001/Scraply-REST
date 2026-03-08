@@ -5,11 +5,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AuthResponse {
+public class WebAuthResponse {
 
     private String name;
     private String email;
     private String role;
-    private String token;
 
 }

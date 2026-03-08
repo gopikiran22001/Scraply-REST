@@ -60,18 +60,15 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(Authentication authentication) {
-        String email = authentication.getName();
-        return authService.profile(email);
+    public ResponseEntity<?> getProfile() {
+        return authService.profile();
     }
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(
-            Authentication authentication,
             @RequestBody ProfileUpdateRequest profileUpdateRequest
         ) {
-        String email = authentication.getName();
-        return authService.updateProfile(email,profileUpdateRequest);
+        return authService.updateProfile(profileUpdateRequest);
     }
 
 }

@@ -6,7 +6,7 @@ import com.scraply.rest.models.enums.AccountStatus;
 import com.scraply.rest.models.enums.AuthProvider;
 import com.scraply.rest.models.enums.Role;
 import com.scraply.rest.repositories.UserRepository;
-import com.scraply.rest.services.JwtService;
+import com.scraply.rest.security.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -144,7 +144,7 @@ public class AuthService {
         );
 
         // Return response
-        return ResponseEntity.ok(AuthResponse.builder()
+        return ResponseEntity.ok(MobileAuthResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(user.getRole().name())
@@ -214,14 +214,17 @@ public class AuthService {
 
         // Return response
         return ResponseEntity
-                .ok(AuthResponse.builder()
+                .ok(WebAuthResponse.builder()
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .name(user.getName())
                 .build());
     }
 
-    public ResponseEntity<?> profile(String email) {
+    public ResponseEntity<?> profile() {
+
+        String email = SecurityUtil.getCurrentUserEmail();
+
         try {
             Optional<User> optionalUser = userRepository
                                             .findByEmail(email);
@@ -252,7 +255,10 @@ public class AuthService {
         }
     }
 
-    public ResponseEntity<?> updateProfile(String email, ProfileUpdateRequest profileUpdateRequest ) {
+    public ResponseEntity<?> updateProfile(ProfileUpdateRequest profileUpdateRequest ) {
+
+        String email = SecurityUtil.getCurrentUserEmail();
+
         try {
             Optional<User> optionalUser = userRepository
                                             .findByEmail(email);
