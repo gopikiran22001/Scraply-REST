@@ -1,5 +1,8 @@
 package com.scraply.rest.config;
 
+import com.scraply.rest.security.AgentAuthInterceptor;
+import com.scraply.rest.security.CustomAccessDeniedHandler;
+import com.scraply.rest.security.CustomAuthenticationEntryPoint;
 import com.scraply.rest.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,14 +16,22 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class SecurityConfig implements WebMvcConfigurer {
 
     private final JwtAuthFilter jwtAuthFilter;
+
+    private final AgentAuthInterceptor agentAuthInterceptor;
+
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -33,17 +44,30 @@ public class SecurityConfig {
                         // PUBLIC ROUTES
                         .requestMatchers(
                                 "/auth/login",
-                                "/auth/register"
+                                "/auth/register",
+                                "/agent/**"
                         ).permitAll()
 
                         // ALL OTHER ROUTES REQUIRE JWT
                         .anyRequest().authenticated()
                 )
 
+                // EXCEPTION HANDLING
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
+
                 // ADD JWT FILTER
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(agentAuthInterceptor)
+                .addPathPatterns("/agent/**");
     }
 
     @Bean

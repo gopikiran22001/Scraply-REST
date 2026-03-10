@@ -1,10 +1,7 @@
 package com.scraply.rest.dto;
 
-import com.scraply.rest.models.enums.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class ProfileUpdateRequest {
@@ -16,7 +13,7 @@ public class ProfileUpdateRequest {
 
     private String phone;
 
-    private String profileImage;
+    private MultipartFile image;
 
     // Optional fields for picker registration
     private String address;

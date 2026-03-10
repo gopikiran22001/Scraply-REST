@@ -10,6 +10,10 @@ public class SecurityUtil {
                 .getContext()
                 .getAuthentication();
 
+        if (authentication == null || authentication.getName() == null) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
         return authentication.getName();
     }
 

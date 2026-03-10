@@ -8,25 +8,24 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController()
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
-
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        return authService.register(request);
+        return ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
@@ -39,9 +38,9 @@ public class AuthController {
         String clientType = httpRequest.getHeader("X-Platform");
 
         if ("MOBILE".equalsIgnoreCase(clientType)) {
-            return authService.mobileLogin(request);
+            return ResponseEntity.ok(authService.mobileLogin(request));
         } else {
-            return authService.webLogin(request, response);
+            return ResponseEntity.ok(authService.webLogin(request, response));
         }
     }
 
@@ -61,14 +60,15 @@ public class AuthController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
-        return authService.profile();
+        return ResponseEntity.ok(authService.profile());
     }
 
-    @PutMapping("/profile")
+    @PutMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProfile(
-            @RequestBody ProfileUpdateRequest profileUpdateRequest
+            @ModelAttribute ProfileUpdateRequest profileUpdateRequest
         ) {
-        return authService.updateProfile(profileUpdateRequest);
+        log.debug("Update profile request: {}", profileUpdateRequest);
+        return ResponseEntity.ok(authService.updateProfile(profileUpdateRequest));
     }
 
 }
