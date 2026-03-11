@@ -1,11 +1,12 @@
 package com.scraply.rest.models;
 
-import com.scraply.rest.models.enums.PickupStatus;
+import com.scraply.rest.models.enums.Status;
 import com.scraply.rest.models.enums.ScrapCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "pickup_requests")
@@ -14,11 +15,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PickupRequest {
+public class Pickup {
 
+    @Column(length = 50)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     // User who created the request
     @ManyToOne
@@ -29,6 +30,10 @@ public class PickupRequest {
     @ManyToOne
     @JoinColumn(name = "picker_id")
     private User picker;
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_by")
+    private User assignedBy;
 
     @Column(nullable = false)
     private String description;
@@ -46,7 +51,7 @@ public class PickupRequest {
     private String address;
 
     @Enumerated(EnumType.STRING)
-    private PickupStatus status;
+    private Status status;
 
     private LocalDateTime requestedAt;
 
@@ -56,7 +61,11 @@ public class PickupRequest {
 
     @PrePersist
     protected void onCreate() {
+        if (id == null) {
+            id = "PKP_" + UUID.randomUUID().toString().replace("-", "");
+        }
         requestedAt = LocalDateTime.now();
-        status = PickupStatus.REQUESTED;
+        status = Status.REQUESTED;
     }
+
 }

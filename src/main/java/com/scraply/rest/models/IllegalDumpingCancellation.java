@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "pickup_cancellation")
+@Table(name = "illegal_dumping_cancellation")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PickupCancellation {
+public class IllegalDumpingCancellation {
 
     @Column(length = 50)
     @Id
@@ -24,8 +24,8 @@ public class PickupCancellation {
     private User cancelledBy;
 
     @OneToOne
-    @JoinColumn(name = "pickup_request_id", nullable = false)
-    private Pickup pickup;
+    @JoinColumn(name = "illegal_dumping_id", nullable = false)
+    private IllegalDumping illegalDumping;
 
     @Column(nullable = false)
     private String reason;
@@ -36,8 +36,9 @@ public class PickupCancellation {
     @PrePersist
     protected void onCreate() {
         if (id == null) {
-            id = "PKC_" + UUID.randomUUID().toString().replace("-", "");
+            id = "DMC_" + UUID.randomUUID().toString().replace("-", "");
         }
         cancelledAt = LocalDateTime.now();
     }
+
 }

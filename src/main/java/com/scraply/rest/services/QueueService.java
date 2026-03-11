@@ -24,9 +24,9 @@ public class QueueService {
      *
      * @param pickupRequestId the ID of the pickup request to enqueue
      */
-    public void enqueuePickupRequest(Long pickupRequestId) {
+    public void enqueuePickupRequest(String pickupRequestId) {
         try {
-            stringRedisTemplate.opsForList().leftPush(PICKUP_QUEUE, pickupRequestId.toString());
+            stringRedisTemplate.opsForList().leftPush(PICKUP_QUEUE, pickupRequestId);
             log.info("Enqueued pickup request ID {} to queue '{}'", pickupRequestId, PICKUP_QUEUE);
         } catch (Exception e) {
             log.error("Failed to enqueue pickup request ID {} to Redis: {}", pickupRequestId, e.getMessage());

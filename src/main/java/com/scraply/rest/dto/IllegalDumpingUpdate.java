@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class PickupRequestUpdate {
+public class IllegalDumpingUpdate {
 
     @NotBlank
     private String id;
@@ -17,5 +17,4 @@ public class PickupRequestUpdate {
     private String assignedTo;
 
     private String reason;
-
 }

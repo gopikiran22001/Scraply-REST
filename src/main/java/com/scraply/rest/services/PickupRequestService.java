@@ -7,12 +7,12 @@ import com.scraply.rest.exception.BadRequestException;
 import com.scraply.rest.exception.ResourceNotFoundException;
 import com.scraply.rest.exception.UnauthorizedException;
 import com.scraply.rest.models.PickupCancellation;
-import com.scraply.rest.models.PickupRequest;
+import com.scraply.rest.models.Pickup;
 import com.scraply.rest.models.User;
-import com.scraply.rest.models.enums.PickupStatus;
+import com.scraply.rest.models.enums.Status;
 import com.scraply.rest.models.enums.ScrapCategory;
 import com.scraply.rest.repositories.PickupCancellationRepository;
-import com.scraply.rest.repositories.PickupRequestRepository;
+import com.scraply.rest.repositories.PickupRepository;
 import com.scraply.rest.repositories.UserRepository;
 import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class PickupRequestService {
 
     private final UserRepository userRepository;
 
-    private final PickupRequestRepository pickupRequestRepository;
+    private final PickupRepository pickupRepository;
 
     private final PickupCancellationRepository pickupCancellationRepository;
 
@@ -45,9 +45,10 @@ public class PickupRequestService {
         User user = getCurrentUser();
 
         return switch (user.getRole()) {
-            case USER -> pickupRequestRepository.findByCategoryAndUserId(category, user.getId());
-            case PICKER -> pickupRequestRepository.findByCategoryAndPickerId(category, user.getId());
-            case ADMIN -> pickupRequestRepository.findAllPickupRequestsByCategory(category);
+            case USER -> pickupRepository.findByCategoryAndUserId(category, user.getId());
+            case PICKER -> pickupRepository.findByCategoryAndPickerId(category, user.getId());
+            case ADMIN -> pickupRepository.findAllPickupRequestsByCategory(category);
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
         };
     }
 
@@ -55,37 +56,39 @@ public class PickupRequestService {
         User user = getCurrentUser();
 
         return switch (user.getRole()) {
-            case USER -> pickupRequestRepository.findByUserId(user.getId());
-            case PICKER -> pickupRequestRepository.findByPickerId(user.getId());
-            case ADMIN -> pickupRequestRepository.findAllPickupRequests();
+            case USER -> pickupRepository.findByUserId(user.getId());
+            case PICKER -> pickupRepository.findByPickerId(user.getId());
+            case ADMIN -> pickupRepository.findAllPickupRequests();
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
         };
     }
 
-    public Object getPickupRequestById(Long id) {
+    public Object getPickupRequestById(String id) {
         User user = getCurrentUser();
 
         return switch (user.getRole()) {
             case USER -> {
-                var result = pickupRequestRepository.findByIdAndUserId(id, user.getId());
+                var result = pickupRepository.findByIdAndUserId(id, user.getId());
                 if (result == null) throw new ResourceNotFoundException("Pickup request", id);
                 yield result;
             }
             case PICKER -> {
-                var result = pickupRequestRepository.findByIdAndPickerId(id, user.getId());
+                var result = pickupRepository.findByIdAndPickerId(id, user.getId());
                 if (result == null) throw new ResourceNotFoundException("Pickup request", id);
                 yield result;
             }
-            case ADMIN -> pickupRequestRepository.findById(id)
+            case ADMIN -> pickupRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Pickup request", id));
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
         };
     }
 
-    public PickupRequest createPickupRequest(PickupRequestBody pickupRequestBody) {
+    public Pickup createPickupRequest(PickupRequestBody pickupRequestBody) {
         User user = getCurrentUser();
 
         String imageUrl = cloudinaryService.uploadImage(pickupRequestBody.getImage());
 
-        PickupRequest pickupRequest = PickupRequest.builder()
+        Pickup pickup = Pickup.builder()
                 .user(user)
                 .category(pickupRequestBody.getCategory())
                 .description(pickupRequestBody.getDescription())
@@ -95,7 +98,7 @@ public class PickupRequestService {
                 .longitude(pickupRequestBody.getLongitude())
                 .build();
         
-        PickupRequest savedRequest = pickupRequestRepository.save(pickupRequest);
+        Pickup savedRequest = pickupRepository.save(pickup);
         
         // Enqueue the pickup request ID to Redis for AI agent processing
         queueService.enqueuePickupRequest(savedRequest.getId());
@@ -106,36 +109,36 @@ public class PickupRequestService {
     public String updatePickupRequest(PickupRequestUpdate pickupRequestUpdate) {
         User user = getCurrentUser();
 
-        PickupRequest pickupRequest = pickupRequestRepository.findById(pickupRequestUpdate.getId())
+        Pickup pickup = pickupRepository.findById(pickupRequestUpdate.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pickup request", pickupRequestUpdate.getId()));
 
         if (user.getRole() == ADMIN) {
-            pickupRequest.setStatus(pickupRequestUpdate.getStatus());
+            pickup.setStatus(pickupRequestUpdate.getStatus());
             if (pickupRequestUpdate.getAssignedTo() != null) {
                 User picker = userRepository.findById(pickupRequestUpdate.getAssignedTo())
                         .orElseThrow(() -> new ResourceNotFoundException("Picker", pickupRequestUpdate.getAssignedTo()));
-                pickupRequest.setPicker(picker);
+                pickup.setPicker(picker);
             }
-            pickupRequestRepository.save(pickupRequest);
+            pickupRepository.save(pickup);
             return "Updated";
         }
 
         if (user.getRole() == PICKER) {
-            if (pickupRequestUpdate.getStatus() == PickupStatus.COMPLETED) {
-                pickupRequest.setStatus(PickupStatus.COMPLETED);
-                pickupRequestRepository.save(pickupRequest);
+            if (pickupRequestUpdate.getStatus() == Status.COMPLETED) {
+                pickup.setStatus(Status.COMPLETED);
+                pickupRepository.save(pickup);
                 return "Updated";
             }
-            if (pickupRequestUpdate.getStatus() == PickupStatus.CANCELLED) {
+            if (pickupRequestUpdate.getStatus() == Status.CANCELLED) {
                 PickupCancellation pickupCancellation = PickupCancellation.builder()
-                        .pickupRequest(pickupRequest)
+                        .pickup(pickup)
                         .cancelledBy(user)
                         .reason(pickupRequestUpdate.getReason())
                         .build();
                 pickupCancellationRepository.save(pickupCancellation);
 
-                pickupRequest.setStatus(PickupStatus.CANCELLED);
-                pickupRequestRepository.save(pickupRequest);
+                pickup.setStatus(Status.CANCELLED);
+                pickupRepository.save(pickup);
                 return "Updated";
             }
             throw new BadRequestException("Invalid status update for picker");
@@ -144,11 +147,15 @@ public class PickupRequestService {
         throw new UnauthorizedException("You are not authorized to update this request");
     }
 
-    public List<?> getRequestedPickups() {
-        return pickupRequestRepository.findByStatus(PickupStatus.REQUESTED);
+    public List<?> getPickupsByStatus(Status status) {
+        User user = getCurrentUser();
+
+        return switch (user.getRole()) {
+            case USER -> pickupRepository.findByUserIdAndStatus(status, user.getId());
+            case PICKER -> pickupRepository.findByPickerIdAndStatus(status, user.getId());
+            case ADMIN -> pickupRepository.findByStatus(status);
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
+        };
     }
 
-    public List<?> getInProgressPickups() {
-        return pickupRequestRepository.findByStatus(PickupStatus.REQUESTED);
-    }
 }

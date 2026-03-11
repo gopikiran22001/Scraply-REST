@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -17,9 +18,9 @@ import java.time.LocalDateTime;
 @Builder
 public class User {
 
+    @Column(length = 50)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(nullable = false)
     private String name;
@@ -27,6 +28,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
     @Column(unique = true)
@@ -62,6 +64,9 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (id == null) {
+            id = "USR_" + UUID.randomUUID().toString().replace("-", "");
+        }
         createdAt = LocalDateTime.now();
     }
 

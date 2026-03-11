@@ -62,6 +62,7 @@ public class AuthService {
 
         if (user.getRole() == null) {
             user.setRole(Role.USER);
+            user.setStatus(AccountStatus.ACCEPTED);
         }
 
         if (user.getRole() == Role.PICKER) {
@@ -72,8 +73,10 @@ public class AuthService {
             user.setVehicleType(request.getVehicleType());
             user.setPickUpRoute(request.getPickUpRoute());
             user.setStatus(AccountStatus.PENDING);
+        } else if (user.getRole() == Role.ADMIN) {
+            user.setStatus(AccountStatus.PENDING);
         } else {
-            user.setStatus(AccountStatus.ACCEPTED);
+            throw new BadRequestException("Invalid ROLE");
         }
 
         userRepository.save(user);
@@ -99,6 +102,10 @@ public class AuthService {
 
         if (user.getRole() == Role.PICKER && user.getStatus() != AccountStatus.ACCEPTED) {
             throw new BadRequestException("Your account is not approved yet!");
+        }
+
+        if(user.getRole() == Role.AGENT) {
+            throw new BadRequestException("This account can't be logged");
         }
 
         String token = jwtService.generateToken(
@@ -138,6 +145,10 @@ public class AuthService {
 
         if (user.getRole() == Role.PICKER && user.getStatus() != AccountStatus.ACCEPTED) {
             throw new BadRequestException("Your account is not approved yet!");
+        }
+
+        if(user.getRole() == Role.AGENT) {
+            throw new BadRequestException("This account can't be logged");
         }
 
         String token = jwtService.generateToken(

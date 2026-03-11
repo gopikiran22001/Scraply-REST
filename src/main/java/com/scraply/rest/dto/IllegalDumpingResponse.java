@@ -1,7 +1,7 @@
 package com.scraply.rest.dto;
 
-import com.scraply.rest.models.enums.Status;
 import com.scraply.rest.models.enums.ScrapCategory;
+import com.scraply.rest.models.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
-public class PickupRequestResponse {
-
+public class IllegalDumpingResponse {
     private String id;
 
     private String userId;
@@ -27,7 +26,7 @@ public class PickupRequestResponse {
 
     private String description;
 
-    private ScrapCategory category;
+    private String landmark;
 
     private String imageUrl;
 
@@ -40,10 +39,7 @@ public class PickupRequestResponse {
 
     private Status status;
 
-    private LocalDateTime requestedAt;
-
+    private LocalDateTime reportedAt;
     private LocalDateTime assignedAt;
-
-    private LocalDateTime completedAt;
-
+    private LocalDateTime resolvedAt;
 }

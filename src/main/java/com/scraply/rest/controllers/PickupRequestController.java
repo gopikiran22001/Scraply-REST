@@ -27,7 +27,7 @@ public class PickupRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPickupRequestById(@PathVariable Long id) {
+    public ResponseEntity<?> getPickupRequestById(@PathVariable String id) {
         return ResponseEntity.ok(pickupRequestService.getPickupRequestById(id));
     }
 
