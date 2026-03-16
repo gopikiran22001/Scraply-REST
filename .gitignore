@@ -33,4 +33,4 @@ build/
 .vscode/
 
 ### Local secrets ###
-etc/secrets/secrets.properties
+.env
