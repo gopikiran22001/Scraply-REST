@@ -1,10 +1,17 @@
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /workspace
+
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY pom.xml pom.xml
+RUN chmod +x mvnw
+RUN ./mvnw -q -DskipTests dependency:go-offline
+
+COPY src src
+RUN ./mvnw -q -DskipTests package
+
 FROM eclipse-temurin:21-jre
-
 WORKDIR /app
-
-# Copy the packaged Spring Boot application JAR built by Maven.
-COPY target/rest-0.0.1-SNAPSHOT.jar app.jar
-
+COPY --from=build /workspace/target/rest-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
