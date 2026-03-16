@@ -33,7 +33,6 @@ build/
 .vscode/
 
 ### Local secrets ###
-secrets.properties
-secrects.properties
-src/main/resources/secrets.properties
-src/main/resources/secrects.properties
+.env
+.env.*
+!.env.example

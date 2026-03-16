@@ -3,6 +3,7 @@ package com.scraply.rest.controllers;
 import com.scraply.rest.dto.LoginRequest;
 import com.scraply.rest.dto.ProfileUpdateRequest;
 import com.scraply.rest.dto.RegisterRequest;
+import com.scraply.rest.dto.UserStatusUpdate;
 import com.scraply.rest.services.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,6 +70,11 @@ public class AuthController {
         ) {
         log.debug("Update profile request: {}", profileUpdateRequest);
         return ResponseEntity.ok(authService.updateProfile(profileUpdateRequest));
+    }
+
+    @PutMapping("/status/update")
+    public ResponseEntity<?> userStatusUpdate(@RequestBody UserStatusUpdate userStatusUpdate) {
+        return ResponseEntity.ok(authService.userStatusUpdate(userStatusUpdate));
     }
 
 }

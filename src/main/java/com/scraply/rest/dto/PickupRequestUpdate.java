@@ -16,6 +16,8 @@ public class PickupRequestUpdate {
 
     private String assignedTo;
 
+    private int priorityLevel;
+
     private String reason;
 
 }

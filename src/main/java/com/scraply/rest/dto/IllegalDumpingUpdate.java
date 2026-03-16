@@ -16,5 +16,7 @@ public class IllegalDumpingUpdate {
 
     private String assignedTo;
 
+    private int priorityLevel;
+
     private String reason;
 }

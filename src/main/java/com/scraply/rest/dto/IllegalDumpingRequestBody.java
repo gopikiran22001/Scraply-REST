@@ -26,5 +26,8 @@ public class IllegalDumpingRequestBody {
     @NotBlank
     private String address;
 
+    @NotNull
+    private int pinCode;
+
     private String landmark;
 }

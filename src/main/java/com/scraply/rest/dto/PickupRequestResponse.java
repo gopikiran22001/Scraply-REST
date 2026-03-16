@@ -38,7 +38,11 @@ public class PickupRequestResponse {
 
     private String address;
 
+    private int pinCode;
+
     private Status status;
+
+    private int priorityLevel;
 
     private LocalDateTime requestedAt;
 

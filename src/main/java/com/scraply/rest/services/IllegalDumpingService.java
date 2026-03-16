@@ -15,6 +15,7 @@ import com.scraply.rest.repositories.IllegalDumpingRepository;
 import com.scraply.rest.repositories.UserRepository;
 import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -79,12 +80,18 @@ public class IllegalDumpingService {
                 .description(requestBody.getDescription())
                 .imageUrl(imageUrl)
                 .address(requestBody.getAddress())
+                .pinCode(requestBody.getPinCode())
                 .latitude(requestBody.getLatitude())
                 .longitude(requestBody.getLongitude())
                 .landmark(requestBody.getLandmark())
                 .build();
 
-        return illegalDumpingRepository.save(dumping);
+        IllegalDumping savedReport = illegalDumpingRepository.save(dumping);
+        
+        // Enqueue the dump report ID to Redis for AI agent processing
+        queueService.enqueueDumpRequest(savedReport.getId());
+        
+        return savedReport;
     }
 
     public String updateDumpingReport(IllegalDumpingUpdate updateRequest) {
@@ -95,15 +102,25 @@ public class IllegalDumpingService {
 
         if (user.getRole() == ADMIN) {
             dumping.setStatus(updateRequest.getStatus());
-            if (updateRequest.getAssignedTo() != null) {
+            if(updateRequest.getStatus() == Status.IN_PROGRESS) {
+                queueService.enqueueDumpForAssignment(dumping.getId());
+            } else if ( updateRequest.getStatus() == Status.ASSIGNED &&
+                    updateRequest.getAssignedTo() != null) {
                 User picker = userRepository.findById(updateRequest.getAssignedTo())
                         .orElseThrow(() -> new ResourceNotFoundException("Picker", updateRequest.getAssignedTo()));
                 dumping.setAssignedPicker(picker);
+                dumping.setPriorityLevel(updateRequest.getPriorityLevel());
                 dumping.setAssignedBy(user);
                 dumping.setAssignedAt(LocalDateTime.now());
-            }
-            if (updateRequest.getStatus() == Status.COMPLETED) {
+            } else if (updateRequest.getStatus() == Status.COMPLETED) {
                 dumping.setResolvedAt(LocalDateTime.now());
+            } else if (updateRequest.getStatus() == Status.CANCELLED) {
+                IllegalDumpingCancellation cancellation = IllegalDumpingCancellation.builder()
+                        .illegalDumping(dumping)
+                        .cancelledBy(user)
+                        .reason(updateRequest.getReason())
+                        .build();
+                illegalDumpingCancellationRepository.save(cancellation);
             }
             illegalDumpingRepository.save(dumping);
             return "Updated";

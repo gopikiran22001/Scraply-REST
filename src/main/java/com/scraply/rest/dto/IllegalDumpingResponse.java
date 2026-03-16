@@ -26,6 +26,8 @@ public class IllegalDumpingResponse {
 
     private String description;
 
+    private ScrapCategory category;
+
     private String landmark;
 
     private String imageUrl;
@@ -37,7 +39,11 @@ public class IllegalDumpingResponse {
 
     private String address;
 
+    private int pinCode;
+
     private Status status;
+
+    private int priorityLevel;
 
     private LocalDateTime reportedAt;
     private LocalDateTime assignedAt;

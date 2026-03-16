@@ -26,6 +26,8 @@ public class AgentService {
     private final IllegalDumpingCancellationRepository illegalDumpingCancellationRepository;
     private final UserRepository userRepository;
 
+    private final QueueService queueService;
+
     private User getAgent(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", id));
@@ -42,6 +44,8 @@ public class AgentService {
                 pickup.setStatus(IN_PROGRESS);
                 pickup.setAssignedBy(user);
                 pickupRepository.save(pickup);
+
+                queueService.enqueuePickupForAssignment(pickup.getId());
 
                 yield "Progressed";
             }
@@ -84,6 +88,8 @@ public class AgentService {
                 dumping.setStatus(IN_PROGRESS);
                 dumping.setAssignedBy(user);
                 illegalDumpingRepository.save(dumping);
+
+                queueService.enqueueDumpForAssignment(dumping.getId());
 
                 yield "Progressed";
             }

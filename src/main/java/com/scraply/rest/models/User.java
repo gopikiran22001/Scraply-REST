@@ -54,6 +54,11 @@ public class User {
 
     private String address;
 
+    @Column (nullable = true)
+    private Integer pinCode;
+
+    private String vehicleNumber;
+
     private String vehicleType;
 
     private String pickUpRoute;

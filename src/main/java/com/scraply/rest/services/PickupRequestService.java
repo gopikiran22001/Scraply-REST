@@ -94,6 +94,7 @@ public class PickupRequestService {
                 .description(pickupRequestBody.getDescription())
                 .imageUrl(imageUrl)
                 .address(pickupRequestBody.getAddress())
+                .pinCode(pickupRequestBody.getPinCode())
                 .latitude(pickupRequestBody.getLatitude())
                 .longitude(pickupRequestBody.getLongitude())
                 .build();
@@ -114,10 +115,29 @@ public class PickupRequestService {
 
         if (user.getRole() == ADMIN) {
             pickup.setStatus(pickupRequestUpdate.getStatus());
-            if (pickupRequestUpdate.getAssignedTo() != null) {
+            if (pickupRequestUpdate.getStatus() == Status.IN_PROGRESS) {
+                pickupRepository.save(pickup);
+                queueService.enqueuePickupForAssignment(pickup.getId());
+                return "Updated";
+            } else if(pickupRequestUpdate.getStatus() == Status.REQUESTED) {
+                pickupRepository.save(pickup);
+                queueService.enqueuePickupRequest(pickup.getId());
+                return "Updated";
+            } else if (pickupRequestUpdate.getStatus() == Status.ASSIGNED &&
+                    pickupRequestUpdate.getAssignedTo() != null) {
                 User picker = userRepository.findById(pickupRequestUpdate.getAssignedTo())
                         .orElseThrow(() -> new ResourceNotFoundException("Picker", pickupRequestUpdate.getAssignedTo()));
                 pickup.setPicker(picker);
+                pickup.setAssignedBy(user);
+                pickup.setAssignedAt(java.time.LocalDateTime.now());
+                pickup.setPriorityLevel(pickupRequestUpdate.getPriorityLevel());
+            } else if (pickupRequestUpdate.getStatus() == Status.CANCELLED) {
+                PickupCancellation pickupCancellation = PickupCancellation.builder()
+                        .pickup(pickup)
+                        .cancelledBy(user)
+                        .reason(pickupRequestUpdate.getReason())
+                        .build();
+                pickupCancellationRepository.save(pickupCancellation);
             }
             pickupRepository.save(pickup);
             return "Updated";
@@ -126,6 +146,7 @@ public class PickupRequestService {
         if (user.getRole() == PICKER) {
             if (pickupRequestUpdate.getStatus() == Status.COMPLETED) {
                 pickup.setStatus(Status.COMPLETED);
+                pickup.setCompletedAt(java.time.LocalDateTime.now());
                 pickupRepository.save(pickup);
                 return "Updated";
             }
@@ -138,6 +159,7 @@ public class PickupRequestService {
                 pickupCancellationRepository.save(pickupCancellation);
 
                 pickup.setStatus(Status.CANCELLED);
+
                 pickupRepository.save(pickup);
                 return "Updated";
             }

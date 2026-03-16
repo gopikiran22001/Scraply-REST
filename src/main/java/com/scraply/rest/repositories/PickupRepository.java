@@ -26,7 +26,9 @@ public interface PickupRepository extends JpaRepository<Pickup, String> {
         pickup.latitude,
         pickup.longitude,
         pickup.address,
+        pickup.pinCode,
         pickup.status,
+        pickup.priorityLevel,
         pickup.requestedAt,
         pickup.assignedAt,
         pickup.completedAt

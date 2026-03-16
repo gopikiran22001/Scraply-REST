@@ -60,18 +60,22 @@ public class AuthService {
                 .provider(AuthProvider.LOCAL)
                 .build();
 
-        if (user.getRole() == null) {
+        if (user.getRole() == null || user.getRole() == Role.USER) {
             user.setRole(Role.USER);
             user.setStatus(AccountStatus.ACCEPTED);
-        }
-
-        if (user.getRole() == Role.PICKER) {
-            if (request.getAddress() == null || request.getVehicleType() == null || request.getPickUpRoute() == null) {
-                throw new BadRequestException("Address, vehicle type and pickup route are required for picker");
+        } else if (user.getRole() == Role.PICKER) {
+            if (request.getAddress() == null
+                    || request.getVehicleType() == null
+                    || request.getPickUpRoute() == null
+                    || request.getPinCode() == null
+                    || request.getVehicleNumber() == null) {
+                throw new BadRequestException("Address, vehicle type, vehicle number, pincode and pickup route are required for picker");
             }
             user.setAddress(request.getAddress());
             user.setVehicleType(request.getVehicleType());
             user.setPickUpRoute(request.getPickUpRoute());
+            user.setPinCode(request.getPinCode());
+            user.setVehicleNumber(request.getVehicleNumber());
             user.setStatus(AccountStatus.PENDING);
         } else if (user.getRole() == Role.ADMIN) {
             user.setStatus(AccountStatus.PENDING);
@@ -217,10 +221,8 @@ public class AuthService {
             user.setPassword(passwordEncoder.encode(profileUpdateRequest.getPassword()));
         }
 
-        if (profileUpdateRequest.getEmail() != null) {
-            if (profileUpdateRequest.getEmail().equals(user.getEmail())) {
-                throw new BadRequestException("New email cannot be same as old email");
-            }
+        if (profileUpdateRequest.getEmail() != null &&
+                !profileUpdateRequest.getEmail().equals(user.getEmail())) {
 
             userRepository.findByEmail(profileUpdateRequest.getEmail()).ifPresent(existingUser -> {
                 throw new BadRequestException("Email already exists");
@@ -238,5 +240,20 @@ public class AuthService {
 
         userRepository.save(user);
         return "Profile updated successfully";
+    }
+
+    public Object userStatusUpdate(UserStatusUpdate userStatusUpdate) {
+        User user = getCurrentUser();
+        if(user.getRole() != Role.ADMIN)
+            throw new BadRequestException("Unauthorized to update user status");
+        User userToUpdate = userRepository.findById(userStatusUpdate.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userStatusUpdate.getUserId()));
+
+        userToUpdate.setStatus(userStatusUpdate.getStatus());
+        if(userStatusUpdate.getStatus() == AccountStatus.ACCEPTED) {
+            userToUpdate.setApprovedBy(user);
+        }
+        userRepository.save(userToUpdate);
+        return "Status updated successfully";
     }
 }

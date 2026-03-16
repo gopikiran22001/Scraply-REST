@@ -27,4 +27,7 @@ public class PickupRequestBody {
 
     @NotBlank
     private String address;
+
+    @NotNull
+    private int pinCode;
 }

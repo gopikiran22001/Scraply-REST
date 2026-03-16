@@ -37,6 +37,9 @@ public class IllegalDumping {
     @Column(nullable = false)
     private String address;
 
+    @Column(nullable = false)
+    private Integer pinCode;
+
     private String landmark;
 
     @Column(nullable = false)
@@ -56,6 +59,9 @@ public class IllegalDumping {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Column(nullable = true)
+    private Integer priorityLevel;
 
     private LocalDateTime reportedAt;
     private LocalDateTime assignedAt;

@@ -31,6 +31,10 @@ public class RegisterRequest {
 
     private String vehicleType;
 
+    private String vehicleNumber;
+
+    private Integer pinCode;
+
     private String pickUpRoute;
 
 }
