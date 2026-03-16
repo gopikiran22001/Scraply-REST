@@ -33,6 +33,4 @@ build/
 .vscode/
 
 ### Local secrets ###
-.env
-.env.*
-!.env.example
+etc/secrets/secrets.properties
