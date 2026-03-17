@@ -39,11 +39,11 @@ public class IllegalDumpingResponse {
 
     private String address;
 
-    private int pinCode;
+    private Integer pinCode;
 
     private Status status;
 
-    private int priorityLevel;
+    private Integer priorityLevel;
 
     private LocalDateTime reportedAt;
     private LocalDateTime assignedAt;
