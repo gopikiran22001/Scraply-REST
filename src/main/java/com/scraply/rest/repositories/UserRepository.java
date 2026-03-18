@@ -14,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    List<User> findByRole(Role role);
+
     // Find all active pickers
     List<User> findByRoleAndStatus(Role role, AccountStatus status);
 
