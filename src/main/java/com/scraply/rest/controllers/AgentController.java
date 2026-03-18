@@ -1,6 +1,7 @@
 package com.scraply.rest.controllers;
 
 import com.scraply.rest.dto.AgentDumpingUpdate;
+import com.scraply.rest.dto.AgentLogRequest;
 import com.scraply.rest.dto.AgentPickupUpdate;
 import com.scraply.rest.services.AgentService;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +22,10 @@ public class AgentController {
     @PutMapping(value = "/dumping")
     public ResponseEntity<?> UpdateDumping(@RequestBody AgentDumpingUpdate agentDumpingUpdate) {
         return ResponseEntity.ok(agentService.UpdateDumping(agentDumpingUpdate));
+    }
+
+    @PostMapping(value = "/logs")
+    public ResponseEntity<?> createLog(@RequestBody AgentLogRequest agentLogRequest) {
+        return ResponseEntity.ok(agentService.createAgentLog(agentLogRequest));
     }
 }

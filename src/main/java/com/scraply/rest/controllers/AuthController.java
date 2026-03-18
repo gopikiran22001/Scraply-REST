@@ -4,6 +4,7 @@ import com.scraply.rest.dto.LoginRequest;
 import com.scraply.rest.dto.ProfileUpdateRequest;
 import com.scraply.rest.dto.RegisterRequest;
 import com.scraply.rest.dto.UserStatusUpdate;
+import com.scraply.rest.services.AgentService;
 import com.scraply.rest.services.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
+    private final AgentService agentService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -94,6 +96,14 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getPickersByRoute(@PathVariable String route) {
         return ResponseEntity.ok(authService.getPickersByRoute(route));
+    }
+
+    @GetMapping("/agent-logs/report")
+    public ResponseEntity<?> getAgentLogReport(
+            @RequestParam(required = false) Integer hours,
+            @RequestParam(required = false) Integer limit
+    ) {
+        return ResponseEntity.ok(agentService.getAgentLogReport(hours, limit));
     }
 
 }
