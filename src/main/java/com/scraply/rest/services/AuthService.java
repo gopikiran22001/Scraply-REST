@@ -345,4 +345,27 @@ public class AuthService {
                 .sorted(java.util.Comparator.comparing(PickerResponse::getName))
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    public java.util.List<PickerResponse> getAllPickersAnyStatus() {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new BadRequestException("Only admins can retrieve pickers");
+        }
+        java.util.List<User> pickers = userRepository.findByRole(Role.PICKER);
+        return pickers.stream()
+                .map(user -> PickerResponse.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .pinCode(user.getPinCode())
+                        .address(user.getAddress())
+                        .vehicleNumber(user.getVehicleNumber())
+                        .vehicleType(user.getVehicleType())
+                        .pickUpRoute(user.getPickUpRoute())
+                        .status(user.getStatus().name())
+                        .build())
+                .sorted(java.util.Comparator.comparing(PickerResponse::getName))
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
