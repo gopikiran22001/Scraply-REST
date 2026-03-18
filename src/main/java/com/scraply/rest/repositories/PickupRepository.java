@@ -31,7 +31,8 @@ public interface PickupRepository extends JpaRepository<Pickup, String> {
         pickup.priorityLevel,
         pickup.requestedAt,
         pickup.assignedAt,
-        pickup.completedAt
+        pickup.completedAt,
+        (SELECT cancellation.reason FROM PickupCancellation cancellation WHERE cancellation.pickup.id = pickup.id)
     )
         FROM Pickup pickup
         JOIN pickup.user user

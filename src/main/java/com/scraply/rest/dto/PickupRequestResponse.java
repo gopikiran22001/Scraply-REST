@@ -50,4 +50,6 @@ public class PickupRequestResponse {
 
     private LocalDateTime completedAt;
 
+    private String cancellationReason;
+
 }

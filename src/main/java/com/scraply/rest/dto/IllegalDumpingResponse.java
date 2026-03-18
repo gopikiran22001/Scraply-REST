@@ -48,4 +48,6 @@ public class IllegalDumpingResponse {
     private LocalDateTime reportedAt;
     private LocalDateTime assignedAt;
     private LocalDateTime resolvedAt;
+
+    private String cancellationReason;
 }

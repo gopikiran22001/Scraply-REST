@@ -31,7 +31,8 @@ public interface IllegalDumpingRepository extends JpaRepository<IllegalDumping, 
             dumping.priorityLevel,
             dumping.reportedAt,
             dumping.assignedAt,
-            dumping.resolvedAt
+            dumping.resolvedAt,
+            (SELECT cancellation.reason FROM IllegalDumpingCancellation cancellation WHERE cancellation.illegalDumping.id = dumping.id)
         )
         FROM IllegalDumping dumping
         JOIN dumping.reportedBy reporter

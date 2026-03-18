@@ -256,4 +256,93 @@ public class AuthService {
         userRepository.save(userToUpdate);
         return "Status updated successfully";
     }
+
+    public java.util.List<PickerResponse> getPickersByPinCode(Integer pinCode) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new BadRequestException("Only admins can retrieve pickers");
+        }
+
+        java.util.List<User> pickers;
+        if (pinCode != null) {
+            // Find pickers with exact pinCode match
+            pickers = userRepository.findByRoleAndStatusAndPinCode(Role.PICKER, AccountStatus.ACCEPTED, pinCode);
+            
+            // If no exact match, find nearby pickers (within 100 pin code range)
+            if (pickers.isEmpty()) {
+                pickers = userRepository.findNearbyPickers(Role.PICKER, AccountStatus.ACCEPTED, 
+                        pinCode - 100, pinCode + 100);
+            }
+        } else {
+            // Get all active pickers if no pinCode specified
+            pickers = userRepository.findByRoleAndStatus(Role.PICKER, AccountStatus.ACCEPTED);
+        }
+
+        return pickers.stream()
+                .map(user -> PickerResponse.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .pinCode(user.getPinCode())
+                        .address(user.getAddress())
+                        .vehicleNumber(user.getVehicleNumber())
+                        .vehicleType(user.getVehicleType())
+                        .pickUpRoute(user.getPickUpRoute())
+                        .status(user.getStatus().name())
+                        .build())
+                .sorted(java.util.Comparator.comparing(PickerResponse::getPinCode)
+                        .thenComparing(PickerResponse::getName))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<PickerResponse> getPickersByRoute(String route) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new BadRequestException("Only admins can retrieve pickers");
+        }
+
+        java.util.List<User> pickers = userRepository.findByRoleAndStatusAndPickUpRoute(Role.PICKER, AccountStatus.ACCEPTED, route);
+
+        return pickers.stream()
+                .map(user -> PickerResponse.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .pinCode(user.getPinCode())
+                        .address(user.getAddress())
+                        .vehicleNumber(user.getVehicleNumber())
+                        .vehicleType(user.getVehicleType())
+                        .pickUpRoute(user.getPickUpRoute())
+                        .status(user.getStatus().name())
+                        .build())
+                .sorted(java.util.Comparator.comparing(PickerResponse::getName))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<PickerResponse> getAllPickers() {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new BadRequestException("Only admins can retrieve pickers");
+        }
+
+        java.util.List<User> pickers = userRepository.findByRoleAndStatus(Role.PICKER, AccountStatus.ACCEPTED);
+
+        return pickers.stream()
+                .map(user -> PickerResponse.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .pinCode(user.getPinCode())
+                        .address(user.getAddress())
+                        .vehicleNumber(user.getVehicleNumber())
+                        .vehicleType(user.getVehicleType())
+                        .pickUpRoute(user.getPickUpRoute())
+                        .status(user.getStatus().name())
+                        .build())
+                .sorted(java.util.Comparator.comparing(PickerResponse::getName))
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

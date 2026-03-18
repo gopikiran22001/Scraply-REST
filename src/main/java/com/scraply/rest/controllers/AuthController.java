@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -75,6 +76,24 @@ public class AuthController {
     @PutMapping("/status/update")
     public ResponseEntity<?> userStatusUpdate(@RequestBody UserStatusUpdate userStatusUpdate) {
         return ResponseEntity.ok(authService.userStatusUpdate(userStatusUpdate));
+    }
+
+    @GetMapping("/pickers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAllPickers() {
+        return ResponseEntity.ok(authService.getAllPickers());
+    }
+
+    @GetMapping("/pickers/pincode/{pinCode}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getPickersByPinCode(@PathVariable Integer pinCode) {
+        return ResponseEntity.ok(authService.getPickersByPinCode(pinCode));
+    }
+
+    @GetMapping("/pickers/route/{route}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getPickersByRoute(@PathVariable String route) {
+        return ResponseEntity.ok(authService.getPickersByRoute(route));
     }
 
 }
