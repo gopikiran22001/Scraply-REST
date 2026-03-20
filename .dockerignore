@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iws
+*.iml
+*.ipr
+
+# Build output
+target/
+
+# Environment files
+.env
+
+# Documentation
+HELP.md
+README.md
+*.md
+
+# OS files
+Thumbs.db
+.DS_Store
