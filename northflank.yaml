@@ -1,0 +1,135 @@
+# Northflank Manifest Configuration for Scraply REST API
+
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: scraply-restapi
+  description: "Scraply REST API - Spring Boot microservice"
+
+spec:
+  # Build Configuration
+  build:
+    dockerfile: Dockerfile
+    context: .
+    buildargs: []
+    
+  # Runtime Configuration
+  run:
+    # Port Configuration
+    port: 8080
+    protocol: http
+    
+    # Environment Variables
+    # NOTE: Set these secrets in Northflank dashboard under "Environment Variables"
+    environment:
+      # JWT Configuration - Set in Northflank dashboard
+      - name: JWT_SECRET
+        value: ${JWT_SECRET}
+      
+      # Database Configuration - Neon PostgreSQL - Set in Northflank dashboard
+      - name: DB_URL
+        value: ${DB_URL}
+      - name: DB_USERNAME
+        value: ${DB_USERNAME}
+      - name: DB_PASSWORD
+        value: ${DB_PASSWORD}
+      
+      # Application Configuration
+      - name: WEBAPP_ORIGIN
+        value: ${WEBAPP_ORIGIN}
+      - name: spring.application.name
+        value: Scraply
+      
+      # Agent Configuration - Set in Northflank dashboard
+      - name: AGENT_ACCESS_KEY
+        value: ${AGENT_ACCESS_KEY}
+      - name: AGENT_SECRET_KEY
+        value: ${AGENT_SECRET_KEY}
+      
+      # Google OAuth Configuration - Set in Northflank dashboard
+      - name: GOOGLE_CLIENT_ID
+        value: ${GOOGLE_CLIENT_ID}
+      - name: GOOGLE_CLIENT_SECRET
+        value: ${GOOGLE_CLIENT_SECRET}
+      
+      # Cloudinary Configuration - Set in Northflank dashboard
+      - name: CLOUDINARY_CLOUD_NAME
+        value: ${CLOUDINARY_CLOUD_NAME}
+      - name: CLOUDINARY_API_KEY
+        value: ${CLOUDINARY_API_KEY}
+      - name: CLOUDINARY_API_SECRET
+        value: ${CLOUDINARY_API_SECRET}
+      
+      # Redis Configuration - Set in Northflank dashboard
+      - name: REDIS_HOST
+        value: ${REDIS_HOST}
+      - name: REDIS_PORT
+        value: ${REDIS_PORT}
+      - name: REDIS_PASSWORD
+        value: ${REDIS_PASSWORD}
+      - name: REDIS_SSL
+        value: ${REDIS_SSL}
+      
+      # Spring Boot Logging Configuration
+      - name: logging.level.root
+        value: INFO
+      - name: logging.level.com.scraply
+        value: DEBUG
+      - name: logging.level.org.springframework.security
+        value: INFO
+    
+    # Resource Limits
+    resources:
+      cpu:
+        limit: 1000m
+        request: 500m
+      memory:
+        limit: 1024Mi
+        request: 512Mi
+    
+    # Health Check Configuration
+    healthcheck:
+      type: http
+      protocol: http
+      path: /actuator/health
+      port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    
+    # Restart Policy
+    restartPolicy:
+      type: Always
+      maxRetries: 3
+    
+    # Scaling Configuration
+    scaling:
+      replicas: 1
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+  # Build Triggers
+  triggers:
+    - type: git
+      branch: main
+      provider: github
+      autoRetry: true
+      autoRetryCount: 3
+
+  # Logging Configuration
+  logging:
+    stdout:
+      enabled: true
+      level: INFO
+    
+  # Networking
+  network:
+    domains:
+      - scraply-api.northflank.app
+    ingress:
+      - port: 8080
+        path: /
+        protocol: http
