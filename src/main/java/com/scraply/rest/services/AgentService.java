@@ -161,20 +161,13 @@ public class AgentService {
                 throw new BadRequestException("Only admins can access agent logs");
             }
 
-            int reportHours = (hours == null || hours <= 0) ? 24 : Math.min(hours, 24 * 30);
-            int reportLimit = (limit == null || limit <= 0) ? 50 : Math.min(limit, 200);
-
-            LocalDateTime since = LocalDateTime.now().minusHours(reportHours);
-
-            long totalLogs = agentLogRepository.countByCreatedAtAfter(since);
-            long errorLogs = agentLogRepository.countByLevelAndCreatedAtAfter("ERROR", since);
-            long warningLogs = agentLogRepository.countByLevelAndCreatedAtAfter("WARNING", since)
-                + agentLogRepository.countByLevelAndCreatedAtAfter("WARN", since);
+            long totalLogs = agentLogRepository.count();
+            long errorLogs = agentLogRepository.countByLevel("ERROR");
+            long warningLogs = agentLogRepository.countByLevel("WARNING") + agentLogRepository.countByLevel("WARN");
 
             List<AgentLogItemResponse> recentLogs = agentLogRepository
-                .findTop200ByCreatedAtAfterOrderByCreatedAtDesc(since)
+                .findAllByOrderByCreatedAtDesc()
                 .stream()
-                .limit(reportLimit)
                 .map(log -> AgentLogItemResponse.builder()
                     .id(log.getId())
                     .agentId(log.getAgentId())
@@ -188,14 +181,14 @@ public class AgentService {
                     .build())
                 .collect(Collectors.toList());
 
-            Map<String, Long> logsByEventType = agentLogRepository.countByEventTypeSince(since)
+            Map<String, Long> logsByEventType = agentLogRepository.countByEventType()
                 .stream()
                 .collect(Collectors.toMap(
                     row -> row[0] == null ? "UNKNOWN" : String.valueOf(row[0]),
                     row -> (Long) row[1]
                 ));
 
-            Map<String, Long> logsByAgent = agentLogRepository.countByAgentSince(since)
+            Map<String, Long> logsByAgent = agentLogRepository.countByAgent()
                 .stream()
                 .collect(Collectors.toMap(
                     row -> row[0] == null ? "UNKNOWN" : String.valueOf(row[0]),
@@ -223,7 +216,7 @@ public class AgentService {
                 ));
 
             return AgentLogReportResponse.builder()
-                .periodHours(reportHours)
+                .periodHours(0)
                 .totalLogs(totalLogs)
                 .errorLogs(errorLogs)
                 .warningLogs(warningLogs)

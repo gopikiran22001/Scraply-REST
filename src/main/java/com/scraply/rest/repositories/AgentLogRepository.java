@@ -21,4 +21,14 @@ public interface AgentLogRepository extends JpaRepository<AgentLog, String> {
 
     @Query("SELECT l.agentId, COUNT(l) FROM AgentLog l WHERE l.createdAt >= :since GROUP BY l.agentId")
     List<Object[]> countByAgentSince(@Param("since") LocalDateTime since);
+
+    long countByLevel(String level);
+
+    List<AgentLog> findAllByOrderByCreatedAtDesc();
+
+    @Query("SELECT l.eventType, COUNT(l) FROM AgentLog l GROUP BY l.eventType")
+    List<Object[]> countByEventType();
+
+    @Query("SELECT l.agentId, COUNT(l) FROM AgentLog l GROUP BY l.agentId")
+    List<Object[]> countByAgent();
 }

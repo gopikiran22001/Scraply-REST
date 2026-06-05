@@ -103,6 +103,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.getAllPickersAnyStatus());
     }
 
+    
     @GetMapping("/agent-logs/report")
     public ResponseEntity<?> getAgentLogReport(
             @RequestParam(required = false) Integer hours,
