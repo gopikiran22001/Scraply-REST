@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.QueryStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -35,9 +35,9 @@ public class SupportQueryResponse {
 
     private String resolvedByName;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    private LocalDateTime resolvedAt;
+    private Instant resolvedAt;
 }

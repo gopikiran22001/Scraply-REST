@@ -18,6 +18,7 @@ import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.time.Instant;
 
 import static com.scraply.rest.models.enums.Role.*;
 
@@ -129,7 +130,7 @@ public class PickupRequestService {
                         .orElseThrow(() -> new ResourceNotFoundException("Picker", pickupRequestUpdate.getAssignedTo()));
                 pickup.setPicker(picker);
                 pickup.setAssignedBy(user);
-                pickup.setAssignedAt(java.time.LocalDateTime.now());
+                pickup.setAssignedAt(Instant.now());
                 pickup.setPriorityLevel(pickupRequestUpdate.getPriorityLevel());
             } else if (pickupRequestUpdate.getStatus() == Status.CANCELLED) {
                 PickupCancellation pickupCancellation = PickupCancellation.builder()
@@ -146,7 +147,7 @@ public class PickupRequestService {
         if (user.getRole() == PICKER) {
             if (pickupRequestUpdate.getStatus() == Status.COMPLETED) {
                 pickup.setStatus(Status.COMPLETED);
-                pickup.setCompletedAt(java.time.LocalDateTime.now());
+                pickup.setCompletedAt(Instant.now());
                 pickupRepository.save(pickup);
                 return "Updated";
             }

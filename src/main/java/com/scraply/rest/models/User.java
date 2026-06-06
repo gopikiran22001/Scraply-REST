@@ -6,7 +6,7 @@ import com.scraply.rest.models.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -50,8 +50,10 @@ public class User {
     @JoinColumn(name = "approved_by")
     private User approvedBy;
 
+    @Column(columnDefinition = "TEXT")
     private String profileImage;
 
+    @Column(columnDefinition = "TEXT")
     private String address;
 
     @Column (nullable = true)
@@ -63,21 +65,21 @@ public class User {
 
     private String pickUpRoute;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) {
             id = "USR_" + UUID.randomUUID().toString().replace("-", "");
         }
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 
 }

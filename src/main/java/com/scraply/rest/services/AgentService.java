@@ -19,7 +19,7 @@ import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,7 +74,7 @@ public class AgentService {
                 pickup.setStatus(ASSIGNED);
                 pickup.setAssignedBy(user);
                 pickup.setPicker(picker);
-                pickup.setAssignedAt(LocalDateTime.now());
+                pickup.setAssignedAt(Instant.now());
                 pickupRepository.save(pickup);
 
                 yield "Assigned";
@@ -118,7 +118,7 @@ public class AgentService {
                 dumping.setStatus(ASSIGNED);
                 dumping.setAssignedBy(user);
                 dumping.setAssignedPicker(picker);
-                dumping.setAssignedAt(LocalDateTime.now());
+                dumping.setAssignedAt(Instant.now());
                 illegalDumpingRepository.save(dumping);
 
                 yield "Assigned";

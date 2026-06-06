@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -22,7 +22,7 @@ public class IllegalDumping {
     private String id;
 
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -34,7 +34,7 @@ public class IllegalDumping {
     @Column(nullable = false)
     private Double longitude;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @Column(nullable = false)
@@ -42,7 +42,7 @@ public class IllegalDumping {
 
     private String landmark;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String imageUrl;
 
     @ManyToOne
@@ -63,9 +63,9 @@ public class IllegalDumping {
     @Column(nullable = true)
     private Integer priorityLevel;
 
-    private LocalDateTime reportedAt;
-    private LocalDateTime assignedAt;
-    private LocalDateTime resolvedAt;
+    private Instant reportedAt;
+    private Instant assignedAt;
+    private Instant resolvedAt;
 
 
     @PrePersist
@@ -73,7 +73,7 @@ public class IllegalDumping {
         if (id == null) {
             id = "DMP_" + UUID.randomUUID().toString().replace("-", "");
         }
-        reportedAt = LocalDateTime.now();
+        reportedAt = Instant.now();
         status = Status.REQUESTED;
     }
 }

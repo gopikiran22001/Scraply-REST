@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.ScrapCategory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -44,11 +44,11 @@ public class PickupRequestResponse {
 
     private int priorityLevel;
 
-    private LocalDateTime requestedAt;
+    private Instant requestedAt;
 
-    private LocalDateTime assignedAt;
+    private Instant assignedAt;
 
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 
     private String cancellationReason;
 

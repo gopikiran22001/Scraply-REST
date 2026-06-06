@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -45,9 +45,9 @@ public class IllegalDumpingResponse {
 
     private Integer priorityLevel;
 
-    private LocalDateTime reportedAt;
-    private LocalDateTime assignedAt;
-    private LocalDateTime resolvedAt;
+    private Instant reportedAt;
+    private Instant assignedAt;
+    private Instant resolvedAt;
 
     private String cancellationReason;
 }

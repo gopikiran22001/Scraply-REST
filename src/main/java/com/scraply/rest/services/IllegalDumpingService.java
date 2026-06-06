@@ -15,10 +15,9 @@ import com.scraply.rest.repositories.IllegalDumpingRepository;
 import com.scraply.rest.repositories.UserRepository;
 import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.cfg.SchemaToolingSettings;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import static com.scraply.rest.models.enums.Role.*;
@@ -102,7 +101,10 @@ public class IllegalDumpingService {
 
         if (user.getRole() == ADMIN) {
             dumping.setStatus(updateRequest.getStatus());
-            if(updateRequest.getStatus() == Status.IN_PROGRESS) {
+            if(updateRequest.getStatus() == Status.REQUESTED) {
+                illegalDumpingRepository.save(dumping);
+                queueService.enqueueDumpRequest(dumping.getId());
+            } else if(updateRequest.getStatus() == Status.IN_PROGRESS) {
                 queueService.enqueueDumpForAssignment(dumping.getId());
             } else if ( updateRequest.getStatus() == Status.ASSIGNED &&
                     updateRequest.getAssignedTo() != null) {
@@ -111,9 +113,9 @@ public class IllegalDumpingService {
                 dumping.setAssignedPicker(picker);
                 dumping.setPriorityLevel(updateRequest.getPriorityLevel());
                 dumping.setAssignedBy(user);
-                dumping.setAssignedAt(LocalDateTime.now());
+                dumping.setAssignedAt(Instant.now());
             } else if (updateRequest.getStatus() == Status.COMPLETED) {
-                dumping.setResolvedAt(LocalDateTime.now());
+                dumping.setResolvedAt(Instant.now());
             } else if (updateRequest.getStatus() == Status.CANCELLED) {
                 IllegalDumpingCancellation cancellation = IllegalDumpingCancellation.builder()
                         .illegalDumping(dumping)
@@ -129,7 +131,7 @@ public class IllegalDumpingService {
         if (user.getRole() == PICKER) {
             if (updateRequest.getStatus() == Status.COMPLETED) {
                 dumping.setStatus(Status.COMPLETED);
-                dumping.setResolvedAt(LocalDateTime.now());
+                dumping.setResolvedAt(Instant.now());
                 illegalDumpingRepository.save(dumping);
                 return "Updated";
             }

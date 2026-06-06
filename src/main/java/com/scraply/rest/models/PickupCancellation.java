@@ -3,7 +3,7 @@ package com.scraply.rest.models;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -27,17 +27,17 @@ public class PickupCancellation {
     @JoinColumn(name = "pickup_request_id", nullable = false)
     private Pickup pickup;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String reason;
 
     @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
+    private Instant cancelledAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) {
             id = "PKC_" + UUID.randomUUID().toString().replace("-", "");
         }
-        cancelledAt = LocalDateTime.now();
+        cancelledAt = Instant.now();
     }
 }

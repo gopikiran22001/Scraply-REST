@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.QueryStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -32,10 +32,10 @@ public class SupportQuery {
     @Column(nullable = false)
     private String requestId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String subject;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Column(nullable = false)
@@ -45,18 +45,18 @@ public class SupportQuery {
     @Column(nullable = false)
     private QueryStatus status;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String adminResponse;
 
     @ManyToOne
     @JoinColumn(name = "resolved_by")
     private User resolvedBy;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    private LocalDateTime resolvedAt;
+    private Instant resolvedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -69,11 +69,11 @@ public class SupportQuery {
         if (priority == null || priority.isBlank()) {
             priority = "NORMAL";
         }
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 }

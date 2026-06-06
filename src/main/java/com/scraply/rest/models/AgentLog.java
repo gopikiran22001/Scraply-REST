@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -33,7 +33,7 @@ public class AgentLog {
     @Column(nullable = false, length = 20)
     private String level;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Column(nullable = false, length = 100)
@@ -45,10 +45,10 @@ public class AgentLog {
     @Column(length = 80)
     private String requestId;
 
-    @Column(length = 4000)
+    @Column(columnDefinition = "TEXT")
     private String details;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
@@ -56,7 +56,7 @@ public class AgentLog {
             id = "AGL_" + UUID.randomUUID().toString().replace("-", "");
         }
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = Instant.now();
         }
     }
 }

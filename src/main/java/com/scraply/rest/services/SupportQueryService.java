@@ -18,7 +18,7 @@ import com.scraply.rest.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -86,7 +86,7 @@ public class SupportQueryService {
         query.setStatus(QueryStatus.RESOLVED);
         query.setAdminResponse(request.getAdminResponse().trim());
         query.setResolvedBy(user);
-        query.setResolvedAt(LocalDateTime.now());
+        query.setResolvedAt(Instant.now());
 
         return toResponse(supportQueryRepository.save(query));
     }

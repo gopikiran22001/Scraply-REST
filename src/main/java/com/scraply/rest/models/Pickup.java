@@ -5,7 +5,7 @@ import com.scraply.rest.models.enums.ScrapCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -35,14 +35,14 @@ public class Pickup {
     @JoinColumn(name = "assigned_by")
     private User assignedBy;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ScrapCategory category;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String imageUrl;
 
     // Location coordinates
@@ -52,7 +52,7 @@ public class Pickup {
     @Column(nullable = false)
     private Double longitude;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @Column(nullable = false)
@@ -64,18 +64,18 @@ public class Pickup {
     @Column(nullable = true)
     private int priorityLevel;
 
-    private LocalDateTime requestedAt;
+    private Instant requestedAt;
 
-    private LocalDateTime assignedAt;
+    private Instant assignedAt;
 
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) {
             id = "PKP_" + UUID.randomUUID().toString().replace("-", "");
         }
-        requestedAt = LocalDateTime.now();
+        requestedAt = Instant.now();
         status = Status.REQUESTED;
     }
 
