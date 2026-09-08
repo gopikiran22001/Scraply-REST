@@ -2,8 +2,8 @@ package com.scraply.rest.controllers;
 
 import com.scraply.rest.dto.LoginRequest;
 import com.scraply.rest.dto.ProfileUpdateRequest;
-import com.scraply.rest.dto.RegisterRequest;
 import com.scraply.rest.dto.UserStatusUpdate;
+import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.services.AgentService;
 import com.scraply.rest.services.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -27,7 +27,7 @@ public class AuthController {
     private final AgentService agentService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody SignUpReq request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
@@ -103,7 +103,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.getAllPickersAnyStatus());
     }
 
-    
+
     @GetMapping("/agent-logs/report")
     public ResponseEntity<?> getAgentLogReport(
             @RequestParam(required = false) Integer hours,

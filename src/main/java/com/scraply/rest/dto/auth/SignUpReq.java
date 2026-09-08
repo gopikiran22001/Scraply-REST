@@ -1,14 +1,13 @@
-package com.scraply.rest.dto;
+package com.scraply.rest.dto.auth;
 
-import com.scraply.rest.models.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
+import com.scraply.rest.models.enums.Role;
 import lombok.Data;
 
 @Data
-public class RegisterRequest {
+public class SignUpReq {
 
     @NotBlank(message = "Name is required")
     private String name;
@@ -35,5 +34,7 @@ public class RegisterRequest {
     private Integer pinCode;
 
     private String pickUpRoute;
+
+    private Integer areaPinCode;
 
 }

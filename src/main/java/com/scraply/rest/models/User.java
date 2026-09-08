@@ -1,26 +1,17 @@
 package com.scraply.rest.models;
 
 import com.scraply.rest.models.enums.AccountStatus;
-import com.scraply.rest.models.enums.AuthProvider;
 import com.scraply.rest.models.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.UUID;
 
+// 1. Base User Entity
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class User {
-
-    @Column(length = 50)
-    @Id
-    private String id;
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class User extends BaseModel{
 
     @Column(nullable = false)
     private String name;
@@ -39,11 +30,6 @@ public class User {
     private Role role;
 
     @Enumerated(EnumType.STRING)
-    private AuthProvider provider;
-
-    private String providerId;
-
-    @Enumerated(EnumType.STRING)
     private AccountStatus status;
 
     @ManyToOne
@@ -60,26 +46,39 @@ public class User {
     private Integer pinCode;
 
     private String vehicleNumber;
-
     private String vehicleType;
-
     private String pickUpRoute;
+    private Integer areaPinCode;
 
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
+    @Override
     @PrePersist
-    protected void onCreate() {
-        if (id == null) {
-            id = "USR_" + UUID.randomUUID().toString().replace("-", "");
-        }
-        createdAt = Instant.now();
+    protected void prePersist() {
+        super.prePersist();
+        pickerCheck();
     }
 
+    @Override
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = Instant.now();
+        super.onUpdate();
+        pickerCheck();
+    }
+
+    private void pickerCheck() {
+        if(this.role.equals(Role.PICKER)) {
+            if (this.vehicleNumber == null || this.vehicleNumber.isBlank()) {
+                throw new IllegalStateException("A Picker must have a valid vehicle number assigned.");
+            }
+            if (this.vehicleType == null || this.vehicleType.isBlank()) {
+                throw new IllegalStateException("A Picker must have a specific vehicle type defined.");
+            }
+            if (this.pickUpRoute == null || this.pickUpRoute.isBlank()) {
+                throw new IllegalStateException("A Picker must be assigned to an active pick-up route.");
+            }
+            if (this.areaPinCode == null) {
+                throw new IllegalStateException("A Picker must have an assigned operating area pin code.");
+            }
+        }
     }
 
 }
