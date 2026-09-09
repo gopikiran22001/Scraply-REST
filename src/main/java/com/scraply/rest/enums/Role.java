@@ -1,4 +1,4 @@
-package com.scraply.rest.models.enums;
+package com.scraply.rest.enums;
 
 public enum Role {
     ADMIN, USER, PICKER, AGENT;
