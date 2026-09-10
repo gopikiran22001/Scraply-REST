@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -19,58 +18,45 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig implements WebMvcConfigurer {
 
-    private final JwtAuthFilter jwtAuthFilter;
-
-    private final AgentAuthInterceptor agentAuthInterceptor;
-
-    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-
-    private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomUserDetailsService userDetailsService;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Value("${webapp.origin}")
     private String webappOrigin;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain springSecurityFilterChain(HttpSecurity http) throws Exception {
 
-        httpSecurity
-                .csrf(csrf->csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-
-                        // PUBLIC ROUTES
-                        .requestMatchers(
-                                "/auth/login",
+                .authorizeHttpRequests(auth->auth
+                        .requestMatchers( "/auth/login",
                                 "/auth/register",
                                 "/agent/**",
-                                "/health/**"
-                        ).permitAll()
+                                "/health/**" )
+                        .permitAll()
 
-                        // ALL OTHER ROUTES REQUIRE JWT
                         .anyRequest().authenticated()
                 )
-
-                // EXCEPTION HANDLING
-                .exceptionHandling(exception -> exception
+                .exceptionHandling(exception->exception
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
+                .
+        ;
 
-                // ADD JWT FILTER
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return httpSecurity.build();
+        return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    @Bean public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration webConfig = new CorsConfiguration();
         webConfig.setAllowedOrigins(List.of(webappOrigin));
         webConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -87,19 +73,13 @@ public class SecurityConfig implements WebMvcConfigurer {
         source.registerCorsConfiguration("/agent/**", agentConfig);
         source.registerCorsConfiguration("/health/**", agentConfig);
         source.registerCorsConfiguration("/**", webConfig);
+
         return source;
     }
 
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder(){
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
-        return config.getAuthenticationManager();
     }
 
 }

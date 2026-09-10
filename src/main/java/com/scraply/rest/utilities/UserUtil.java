@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Component
-public class UserUtility {
+public class UserUtil {
 
     private final UserRepository userRepository;
 

@@ -3,7 +3,7 @@ package com.scraply.rest.service;
 import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.UserResponse;
-import com.scraply.rest.utilities.UserUtility;
+import com.scraply.rest.utilities.UserUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserUtility userUtility;
+    private final UserUtil userUtility;
 
     public UserResponse register(SignUpReq request) {
         return userUtility.create(request);
