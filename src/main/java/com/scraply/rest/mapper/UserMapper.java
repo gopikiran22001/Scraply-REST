@@ -30,9 +30,9 @@ public class UserMapper {
                 .pinCode(request.getPinCode())
                 .pickUpRoute(request.getPickUpRoute())
                 .areaPinCode(request.getAreaPinCode())
-                .role(Role.USER)
+                .role(request.getRole())
                 .build();
-        if (user.getRole() == Role.ADMIN || user.getRole() == Role.PICKER)
+        if (user.getRole().equals(Role.ADMIN) || user.getRole().equals(Role.PICKER))
             user.setStatus(AccountStatus.PENDING);
         return user;
     }

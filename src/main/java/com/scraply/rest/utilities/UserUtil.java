@@ -1,5 +1,6 @@
 package com.scraply.rest.utilities;
 
+import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.exception.DuplicateResourceException;
@@ -11,6 +12,7 @@ import com.scraply.rest.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -61,5 +63,12 @@ public class UserUtil {
         userRepository.save(user);
 
         return userMapper.toResponse(user);
+    }
+
+    public UserResponse sigIn(SignInReq request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
+
+        if(user.)
+
     }
 }

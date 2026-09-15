@@ -14,7 +14,7 @@
 target/
 
 # Environment files
-.env
+secret/
 
 # Documentation
 HELP.md
