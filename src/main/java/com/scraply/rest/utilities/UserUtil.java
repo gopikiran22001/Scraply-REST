@@ -57,7 +57,7 @@ public class UserUtil {
     }
 
     public UserResponse create(SignUpReq request) {
-        if (userRepository.isExistByEmail(request.getEmail()))
+        if (userRepository.existsByEmail(request.getEmail()))
             throw new DuplicateResourceException("Email Already Exist");
 
         User user = userMapper.toEntity(request);

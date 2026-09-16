@@ -35,10 +35,6 @@ public class User extends BaseModel{
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "approved_by")
-    private User approvedBy;
-
     @Column(columnDefinition = "TEXT")
     private String profileImage;
 

@@ -34,6 +34,8 @@ public class UserMapper {
                 .build();
         if (user.getRole().equals(Role.ADMIN) || user.getRole().equals(Role.PICKER))
             user.setStatus(AccountStatus.PENDING);
+        else
+            user.setStatus(AccountStatus.ACCEPTED);
         return user;
     }
 
