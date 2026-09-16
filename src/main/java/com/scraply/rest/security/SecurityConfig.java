@@ -21,7 +21,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomUserDetailsService userDetailsService;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
 
@@ -32,15 +31,10 @@ public class SecurityConfig {
                     .cors(org.springframework.security.config.Customizer.withDefaults())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint).accessDeniedHandler(accessDeniedHandler))
-                    .authenticationProvider(authenticationProvider())
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers(
-                                    "/api/auth/**",
-                                    "/api/organizations/active",
-                                    "/v3/api-docs/**",
-                                    "/swagger-ui/**",
-                                    "/swagger-ui.html",
-                                    "/actuator/health"
+                                    "/auth/login",
+                                    "/auth/register"
                             ).permitAll()
                             .anyRequest().authenticated())
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -51,14 +45,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

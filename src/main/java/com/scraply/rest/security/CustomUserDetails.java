@@ -22,12 +22,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return null;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.getId().toString();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return user.getStatus() != AccountStatus.DELETED;
+        return !user.getStatus().equals(AccountStatus.DELETED);
     }
 
     @Override
@@ -47,11 +47,11 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus() == AccountStatus.ACCEPTED;
+        return user.getStatus().equals(AccountStatus.ACCEPTED);
     }
 
     public User getUser() {
-        return user;
+        return null;
     }
 }
 

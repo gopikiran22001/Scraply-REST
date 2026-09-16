@@ -15,8 +15,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CookieUtil {
 
-    @Value("${security.jwt.cookie.token-name:token}")
-    private String tokenCookieName;
+    @Value("${security.jwt.cookie.name:token}")
+    private String cookieName;
 
     @Value("${security.jwt.cookie.http-only:true}")
     private boolean httpOnly;
@@ -30,11 +30,15 @@ public class CookieUtil {
     @Value("${security.jwt.cookie.path:/}")
     private String path;
 
+    @Value("${security.jwt.cookie.token-expiry:2592000}")
+    private int tokenExpiry;
+
+
     /**
      * Creates and sets an access token cookie in the response
      */
-    public void setTokenCookie(HttpServletResponse response, String token, int tokenExpiry) {
-        setCookie(response, tokenCookieName, token, tokenExpiry);
+    public void setTokenCookie(HttpServletResponse response, String token) {
+        setCookie(response, cookieName, token, tokenExpiry);
     }
 
     /**
@@ -54,7 +58,7 @@ public class CookieUtil {
      * Retrieves the token from cookies
      */
     public Optional<String> getTokenFromCookies(HttpServletRequest request) {
-        return getTokenFromCookies(request, tokenCookieName);
+        return getTokenFromCookies(request, cookieName);
     }
 
     /**
@@ -75,7 +79,7 @@ public class CookieUtil {
      * Clears both access and refresh token cookies
      */
     public void clearAuthenticationCookies(HttpServletResponse response) {
-        clearCookie(response, tokenCookieName);
+        clearCookie(response, cookieName);
     }
 
     /**

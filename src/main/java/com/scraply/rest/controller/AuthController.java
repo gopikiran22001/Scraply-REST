@@ -5,6 +5,7 @@ import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserResponse>> login(@RequestBody SignInReq request) {
-        return ResponseEntity.ok(ApiResponse.success("User Logged In", authService.login(request)));
+    public ResponseEntity<ApiResponse<UserResponse>> login(@RequestBody SignInReq request, HttpServletResponse response) {
+        return ResponseEntity.ok(ApiResponse.success("User Logged In", authService.login(request,response)));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
+        return ResponseEntity.ok(ApiResponse.success("User Logged Out", authService.logout(response)));
     }
 
 }

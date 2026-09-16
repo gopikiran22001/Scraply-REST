@@ -1,6 +1,7 @@
 package com.scraply.rest.security;
 
 import com.scraply.rest.model.User;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +23,13 @@ import java.util.UUID;
 public class JwtService {
 
     @Value("${jwt.expiration.user:15552000000}")
-    private int userTokenExpiration;
+    private long userTokenExpiration;
 
     @Value("${jwt.expiration.picker:2592000000}")
-    private int pickerTokenExpiration;
+    private long pickerTokenExpiration;
 
     @Value("${jwt.expiration.admin:86400000}")
-    private int adminTokenExpiration;
+    private long adminTokenExpiration;
 
     @Value("${jwt.secret:1234567890}")
     private String secretKey;
@@ -43,7 +44,7 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        return parseClaims(token).get("sub");
+        return parseClaims(token).get("mail");
     }
 
     public UUID extractUserId(String token) {
@@ -61,8 +62,7 @@ public class JwtService {
                 Long.toString(now.getEpochSecond()),
                 Long.toString(now.plusSeconds(expirationSeconds).getEpochSecond()),
                 claims.get("userId"),
-                claims.get("role"),
-                claims.get("tokenType")
+                claims.get("role")
         );
         return sign(payload) + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
     }
@@ -80,12 +80,11 @@ public class JwtService {
         }
         String[] values = payload.split("\\|", -1);
         Map<String, String> claims = new LinkedHashMap<>();
-        claims.put("sub", values[0]);
+        claims.put("mail", values[0]);
         claims.put("iat", values[1]);
         claims.put("exp", values[2]);
         claims.put("userId", values[3].isBlank() ? null : values[3]);
         claims.put("role", values[4]);
-        claims.put("tokenType", values[5]);
         return claims;
     }
 
@@ -114,5 +113,9 @@ public class JwtService {
         } catch (IllegalArgumentException ex) {
             return secret.getBytes(StandardCharsets.UTF_8);
         }
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        return !isTokenExpired(token) && userDetails != null;
     }
 }

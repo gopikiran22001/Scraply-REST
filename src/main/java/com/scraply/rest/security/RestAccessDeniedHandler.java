@@ -1,7 +1,7 @@
 package com.scraply.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.stdace.neuroforge.common.ErrorResponse;
+import com.scraply.rest.common.ErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

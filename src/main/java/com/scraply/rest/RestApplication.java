@@ -21,15 +21,5 @@ public class RestApplication {
 		SpringApplication.run(RestApplication.class, args);
 	}
 
-//	@EventListener(ApplicationReadyEvent.class)
-//	public void onApplicationReady() {
-//		String port = environment.getProperty("server.port", "8080");
-//		log.info("=================================================");
-//		log.info("  Scraply Application started successfully");
-//		log.info("  Connected to PostgreSQL database");
-//		log.info("  Server running on port: {}", port);
-//		log.info("  Swagger UI: http://localhost:{}/swagger-ui.html", port);
-//		log.info("=================================================");
-//	}
 }
 

@@ -3,16 +3,20 @@ package com.scraply.rest.utilities;
 import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.UserResponse;
+import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.exception.DuplicateResourceException;
 import com.scraply.rest.exception.ResourceNotFoundException;
 import com.scraply.rest.enums.Role;
 import com.scraply.rest.mapper.UserMapper;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
+import com.scraply.rest.security.CookieUtil;
+import com.scraply.rest.security.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -23,33 +27,31 @@ public class UserUtil {
 
     private final UserMapper userMapper;
 
-    public User getCurrentUser() {
-        String email = SecurityUtil.getCurrentUserEmail();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-    }
+    private final JwtService jwtService;
 
-    public String getCurrentUserEmail() {
-        return SecurityUtil.getCurrentUserEmail();
+    private final CookieUtil cookieUtil;
+
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public User getCurrentUser() {
+        return userRepository.findById(SecurityUtil.getCurrentUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
     }
 
     public UUID getCurrentUserId() {
-        String email = SecurityUtil.getCurrentUserEmail();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-        return user.getId();
+        return SecurityUtil.getCurrentUserId();
     }
 
     public Role getCurrentUserRole() {
-        String email = SecurityUtil.getCurrentUserEmail();
-        User user = userRepository.findByEmail(email)
+        UUID id = SecurityUtil.getCurrentUserId();
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
         return user.getRole();
     }
 
     public boolean isCurrentUserAdmin() {
-        String email = SecurityUtil.getCurrentUserEmail();
-        User user = userRepository.findByEmail(email)
+        UUID id = SecurityUtil.getCurrentUserId();
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
         return user.getRole().equals(Role.ADMIN);
     }
@@ -65,10 +67,24 @@ public class UserUtil {
         return userMapper.toResponse(user);
     }
 
-    public UserResponse sigIn(SignInReq request) {
+    public UserResponse sigIn(SignInReq request, HttpServletResponse httpServletResponse) {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
 
-        if(user.)
+        if(!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new ResourceNotFoundException("Invalid Credentials");
+        }
 
+        if (!user.getStatus().equals(AccountStatus.ACCEPTED)) {
+            throw new ResourceNotFoundException("Account Not Accepted Yet");
+        }
+
+        cookieUtil.setTokenCookie(httpServletResponse, jwtService.generateToken(user));
+
+        return userMapper.toResponse(user);
+    }
+
+    public String logout(HttpServletResponse response) {
+        cookieUtil.clearAuthenticationCookies(response);
+        return "Logged Out Successfully";
     }
 }
