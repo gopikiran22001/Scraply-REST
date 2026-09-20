@@ -1,7 +1,6 @@
 package com.scraply.rest.security;
 
 import com.scraply.rest.model.User;
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,8 +9,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -36,7 +33,7 @@ public class JwtService {
 
 
     public String generateToken(User user) {
-        return switch (user.getRole()) {
+        return switch (user.getUserRole()) {
             case ADMIN -> buildToken(user, adminTokenExpiration);
             case PICKER -> buildToken(user, pickerTokenExpiration);
             default -> buildToken(user, userTokenExpiration);
@@ -55,7 +52,7 @@ public class JwtService {
     private String buildToken(User user, long expirationSeconds) {
         Map<String, String> claims = new LinkedHashMap<>();
         claims.put("userId", user.getId() != null ? user.getId().toString() : null);
-        claims.put("role", user.getRole().name());
+        claims.put("role", user.getUserRole().name());
         Instant now = Instant.now();
         String payload = String.join("|",
                 user.getEmail(),
@@ -116,6 +113,6 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        return !isTokenExpired(token) && userDetails != null;
+        return !isTokenExpired(token) && userDetails != null && userDetails.isEnabled();
     }
 }

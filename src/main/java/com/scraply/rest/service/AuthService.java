@@ -7,6 +7,7 @@ import com.scraply.rest.utilities.UserUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -15,10 +16,11 @@ public class AuthService {
 
     private final UserUtil userUtility;
 
-    public UserResponse register(SignUpReq request) {
-        return userUtility.create(request);
+    public UserResponse register(SignUpReq request, HttpServletResponse response) {
+        return userUtility.create(request, response);
     }
 
+    @Transactional(readOnly = true)
     public UserResponse login(SignInReq request, HttpServletResponse response) {
         return userUtility.sigIn(request, response);
     }

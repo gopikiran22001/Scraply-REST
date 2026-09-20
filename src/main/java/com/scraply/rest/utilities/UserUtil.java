@@ -6,16 +6,18 @@ import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.exception.DuplicateResourceException;
 import com.scraply.rest.exception.ResourceNotFoundException;
-import com.scraply.rest.enums.Role;
+import com.scraply.rest.enums.UserRole;
 import com.scraply.rest.mapper.UserMapper;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
 import com.scraply.rest.security.CookieUtil;
 import com.scraply.rest.security.JwtService;
+import jakarta.persistence.Table;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -38,31 +40,15 @@ public class UserUtil {
                 .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
     }
 
-    public UUID getCurrentUserId() {
-        return SecurityUtil.getCurrentUserId();
-    }
-
-    public Role getCurrentUserRole() {
-        UUID id = SecurityUtil.getCurrentUserId();
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-        return user.getRole();
-    }
-
-    public boolean isCurrentUserAdmin() {
-        UUID id = SecurityUtil.getCurrentUserId();
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-        return user.getRole().equals(Role.ADMIN);
-    }
-
-    public UserResponse create(SignUpReq request) {
+    public UserResponse create(SignUpReq request, HttpServletResponse response) {
         if (userRepository.existsByEmail(request.getEmail()))
             throw new DuplicateResourceException("Email Already Exist");
 
         User user = userMapper.toEntity(request);
 
         userRepository.save(user);
+
+        cookieSetter(response, user);
 
         return userMapper.toResponse(user);
     }
@@ -78,7 +64,7 @@ public class UserUtil {
             throw new ResourceNotFoundException("Account Not Accepted Yet");
         }
 
-        cookieUtil.setTokenCookie(httpServletResponse, jwtService.generateToken(user));
+        cookieSetter(httpServletResponse, user);
 
         return userMapper.toResponse(user);
     }
@@ -86,5 +72,9 @@ public class UserUtil {
     public String logout(HttpServletResponse response) {
         cookieUtil.clearAuthenticationCookies(response);
         return "Logged Out Successfully";
+    }
+
+    private void cookieSetter(HttpServletResponse httpServletResponse, User user) {
+        cookieUtil.setTokenCookie(httpServletResponse, jwtService.generateToken(user));
     }
 }

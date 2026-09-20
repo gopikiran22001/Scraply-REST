@@ -1,11 +1,9 @@
 package com.scraply.rest.model;
 
 import com.scraply.rest.enums.AccountStatus;
-import com.scraply.rest.enums.Role;
+import com.scraply.rest.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.Instant;
 
 // 1. Base User Entity
 @Entity
@@ -30,9 +28,10 @@ public class User extends BaseModel{
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private UserRole userRole;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AccountStatus status;
 
     @Column(columnDefinition = "TEXT")
@@ -64,7 +63,7 @@ public class User extends BaseModel{
     }
 
     private void pickerCheck() {
-        if(this.role.equals(Role.PICKER)) {
+        if(this.userRole.equals(UserRole.PICKER)) {
             if (this.vehicleNumber == null || this.vehicleNumber.isBlank()) {
                 throw new IllegalStateException("A Picker must have a valid vehicle number assigned.");
             }

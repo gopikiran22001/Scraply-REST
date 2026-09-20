@@ -1,5 +1,5 @@
 package com.scraply.rest.enums;
 
-public enum Role {
+public enum UserRole {
     ADMIN, USER, PICKER, AGENT;
 }

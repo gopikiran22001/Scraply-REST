@@ -3,7 +3,7 @@ package com.scraply.rest.dto.auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import com.scraply.rest.enums.Role;
+import com.scraply.rest.enums.UserRole;
 import lombok.Data;
 
 @Data
@@ -25,7 +25,7 @@ public class SignUpReq {
 
     private String phone;
 
-    private Role role;
+    private UserRole userRole;
 
     // Optional fields for picker registration
     private String address;

@@ -21,8 +21,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> register(@RequestBody SignUpReq request) {
-        return ResponseEntity.ok(ApiResponse.success("User Registered", authService.register(request)));
+    public ResponseEntity<ApiResponse<UserResponse>> register(@RequestBody SignUpReq request, HttpServletResponse response) {
+        return ResponseEntity.ok(ApiResponse.success("User Registered", authService.register(request, response)));
     }
 
     @PostMapping("/login")
@@ -32,7 +32,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
-        return ResponseEntity.ok(ApiResponse.success("User Logged Out", authService.logout(response)));
+        return ResponseEntity.ok(ApiResponse.success( authService.logout(response), null));
     }
 
 }

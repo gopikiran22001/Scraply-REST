@@ -9,15 +9,14 @@ import java.util.UUID;
 public class SecurityUtil {
 
     public static UUID getCurrentUserId() {
-    Authentication authentication =
-            SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-    if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-        throw new IllegalStateException("No authenticated user found");
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
+        return UUID.fromString(userDetails.getUsername());
     }
-
-    return UUID.fromString(userDetails.getUsername());
-}
-
 
 }

@@ -4,7 +4,8 @@ import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.PickerResponse;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
-import com.scraply.rest.enums.Role;
+import com.scraply.rest.enums.UserRole;
+import com.scraply.rest.exception.BusinessException;
 import com.scraply.rest.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,6 +19,9 @@ public class UserMapper {
 
 
     public User toEntity(SignUpReq request) {
+        if(UserRole.AGENT.equals(request.getUserRole())) {
+            throw new BusinessException("Agent is not allowed to sign up");
+        }
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -30,9 +34,9 @@ public class UserMapper {
                 .pinCode(request.getPinCode())
                 .pickUpRoute(request.getPickUpRoute())
                 .areaPinCode(request.getAreaPinCode())
-                .role(request.getRole())
+                .userRole(request.getUserRole()==null? UserRole.USER:request.getUserRole())
                 .build();
-        if (user.getRole().equals(Role.ADMIN) || user.getRole().equals(Role.PICKER))
+        if (user.getUserRole().equals(UserRole.ADMIN) || user.getUserRole().equals(UserRole.PICKER))
             user.setStatus(AccountStatus.PENDING);
         else
             user.setStatus(AccountStatus.ACCEPTED);
@@ -40,7 +44,7 @@ public class UserMapper {
     }
 
     public UserResponse toResponse(User user) {
-        if(user.getRole().equals(Role.PICKER)) {
+        if(user.getUserRole().equals(UserRole.PICKER)) {
              return PickerResponse.builder()
                     .id(user.getId())
                     .firstName(user.getFirstName())
@@ -53,7 +57,7 @@ public class UserMapper {
                     .pinCode(user.getPinCode())
                     .pickUpRoute(user.getPickUpRoute())
                     .areaPinCode(user.getAreaPinCode())
-                    .role(user.getRole())
+                    .userRole(user.getUserRole())
                     .build();
         }
 
@@ -64,7 +68,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
-                .role(user.getRole())
+                .userRole(user.getUserRole())
                 .pinCode(user.getPinCode())
                 .build();
     }
