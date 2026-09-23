@@ -1,11 +1,15 @@
 package com.scraply.rest.mapper;
 
-import com.scraply.rest.dto.request.RequestBodyDTO;
+import com.scraply.rest.dto.request.NewRequestBody;
 import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.model.Request;
 import com.scraply.rest.utilities.UserUtil;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,17 +18,19 @@ public class RequestMapper {
 
     private final UserUtil userUtil;
 
-    public Request toEntity(RequestBodyDTO requestBodyDTO, String imageUrl) {
+    public Request toEntity(NewRequestBody newRequestBody, String imageUrl) {
         return Request.builder()
-                .requestCategory(requestBodyDTO.getRequestCategory())
-                .requestType(requestBodyDTO.getRequestType())
+                .requestCategory(newRequestBody.getRequestCategory())
+                .requestType(newRequestBody.getRequestType())
                 .imageUrl(imageUrl)
-                .description(requestBodyDTO.getDescription())
+                .description(newRequestBody.getDescription())
                 .user(userUtil.getCurrentUser())
-                .address(requestBodyDTO.getAddress())
-                .landMark(requestBodyDTO.getLandMark())
-                .latitude(requestBodyDTO.getLatitude())
-                .longitude(requestBodyDTO.getLongitude())
+                .address(newRequestBody.getAddress())
+                .pinCode(newRequestBody.getPinCode())
+                .landMark(newRequestBody.getLandMark())
+                .latitude(newRequestBody.getLatitude())
+                .longitude(newRequestBody.getLongitude())
+                .location(createLocation(newRequestBody.getLatitude(),newRequestBody.getLongitude()))
                 .requestStatus(RequestStatus.REQUESTED)
                 .build();
     }
@@ -37,20 +43,35 @@ public class RequestMapper {
                 .imageUrl(request.getImageUrl())
                 .description(request.getDescription())
                 .address(request.getAddress())
+                .pinCode(request.getPinCode())
                 .landMark(request.getLandMark())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .requestStatus(request.getRequestStatus())
                 .build();
-        if(request.getPicker() != null) {
+        if(request.getRequestPickerAssignment() != null) {
             requestResponse.setPickerDetails(RequestResponse.PickerDetails.builder()
-                            .id(request.getPicker().getId())
-                            .firstName(request.getPicker().getFirstName())
-                            .lastName(request.getPicker().getLastName())
-                            .vehicleNumber(request.getPicker().getVehicleNumber())
-                            .vehicleType(request.getPicker().getVehicleType())
+                            .id(request.getRequestPickerAssignment().getPicker().getId())
+                            .firstName(request.getRequestPickerAssignment().getPicker().getFirstName())
+                            .lastName(request.getRequestPickerAssignment().getPicker().getLastName())
+                            .vehicleNumber(request.getRequestPickerAssignment().getPicker().getVehicleNumber())
+                            .vehicleType(request.getRequestPickerAssignment().getPicker().getVehicleType())
                             .build());
         }
         return requestResponse;
     }
+
+    private Point createLocation(Double latitude, Double longitude) {
+        GeometryFactory geometryFactory =
+                new GeometryFactory(new PrecisionModel(), 4326);
+
+        Point point = geometryFactory.createPoint(
+                new Coordinate(longitude, latitude)
+        );
+
+        point.setSRID(4326);
+
+        return point;
+    }
+
 }

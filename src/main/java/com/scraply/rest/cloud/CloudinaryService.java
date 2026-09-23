@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.scraply.rest.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,9 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
+    @Value("${cloudinary.folder-path}")
+    private String folderPath;
+
     /**
      * Uploads a MultipartFile to Cloudinary and returns the secure URL.
      *
@@ -25,25 +29,7 @@ public class CloudinaryService {
      * @throws BadRequestException if upload fails
      */
     public String uploadImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BadRequestException("Image file is required");
-        }
-
-        try {
-            Map<String, Object> uploadResult = cloudinary.uploader().upload(
-                    file.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "scraply/profile-images",
-                            "resource_type", "image"
-                    )
-            );
-
-            String secureUrl = (String) uploadResult.get("secure_url");
-            return secureUrl;
-
-        } catch (IOException e) {
-            throw new BadRequestException("Failed to upload image: " + e.getMessage());
-        }
+        return uploadImage(file, folderPath);
     }
 
     /**

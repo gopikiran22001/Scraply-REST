@@ -17,6 +17,4 @@ public @interface Auditable {
     AuditAction action();
 
     AuditEntityType entity();
-
-    String entityId();
 }

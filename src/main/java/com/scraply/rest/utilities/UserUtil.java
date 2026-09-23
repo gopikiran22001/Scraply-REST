@@ -77,4 +77,9 @@ public class UserUtil {
     private void cookieSetter(HttpServletResponse httpServletResponse, User user) {
         cookieUtil.setTokenCookie(httpServletResponse, jwtService.generateToken(user));
     }
+
+    public UserResponse setAccountStatus(User user, AccountStatus accountStatus) {
+        user.setStatus(accountStatus);
+        return userMapper.toResponse(user);
+    }
 }

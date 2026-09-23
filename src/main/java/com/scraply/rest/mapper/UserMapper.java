@@ -34,7 +34,7 @@ public class UserMapper {
                 .pinCode(request.getPinCode())
                 .pickUpRoute(request.getPickUpRoute())
                 .areaPinCode(request.getAreaPinCode())
-                .userRole(request.getUserRole()==null? UserRole.USER:request.getUserRole())
+                .userRole(request.getUserRole()==null?UserRole.USER:request.getUserRole())
                 .build();
         if (user.getUserRole().equals(UserRole.ADMIN) || user.getUserRole().equals(UserRole.PICKER))
             user.setStatus(AccountStatus.PENDING);

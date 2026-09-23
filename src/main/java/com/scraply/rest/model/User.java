@@ -7,7 +7,9 @@ import lombok.*;
 
 // 1. Base User Entity
 @Entity
-@Table(name = "users")
+@Table(name = "users",indexes = {
+        @Index(name = "idx_user_mail",columnList = "email")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User extends BaseModel{
 

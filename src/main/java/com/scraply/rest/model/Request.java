@@ -5,6 +5,7 @@ import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.enums.RequestType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name="requests")
@@ -19,9 +20,9 @@ public class Request extends BaseModel{
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "picker_id")
-    private User picker;
+    @OneToOne
+    @JoinColumn(name = "request_picker_assignment_id")
+    private RequestPickerAssignment requestPickerAssignment;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -44,6 +45,9 @@ public class Request extends BaseModel{
     @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
+    @Column(nullable = false)
+    private Integer pinCode;
+
     @Column(columnDefinition = "TEXT")
     private String landMark;
 
@@ -52,5 +56,11 @@ public class Request extends BaseModel{
 
     @Column(nullable = false)
     private Double longitude;
+
+    @Column(
+            columnDefinition = "geography(Point, 4326)",
+            nullable = false
+    )
+    private Point location;
 
 }

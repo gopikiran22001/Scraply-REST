@@ -3,7 +3,6 @@ package com.scraply.rest.dto.request;
 import com.scraply.rest.enums.RequestCategory;
 import com.scraply.rest.enums.RequestType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestBodyDTO {
+public class NewRequestBody {
 
     @NotNull
     private RequestType requestType;
@@ -31,6 +30,9 @@ public class RequestBodyDTO {
 
     @NotBlank
     private String address;
+
+    @NotNull
+    private Integer pinCode;
 
     private String landMark;
 

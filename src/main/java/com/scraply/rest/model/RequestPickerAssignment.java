@@ -23,9 +23,7 @@ public class RequestPickerAssignment extends BaseModel {
     private User picker;
 
     @Column(nullable = false)
-    private Instant assignedAt;
-
-    private Instant unassignedAt;
+    private boolean active;
 
     @Column(columnDefinition = "TEXT")
     private String reason;

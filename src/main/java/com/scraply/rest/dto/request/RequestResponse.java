@@ -27,6 +27,8 @@ public class RequestResponse {
 
     private String address;
 
+    private Integer pinCode;
+
     private String landMark;
 
     private Double latitude;
