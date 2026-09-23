@@ -3,18 +3,17 @@ package com.scraply.rest.utilities;
 import com.scraply.rest.common.PageResponse;
 import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
-import com.scraply.rest.dto.user.PickerResponse;
+import com.scraply.rest.dto.user.PickerDetailsUpdate;
 import com.scraply.rest.dto.user.UserResponse;
+import com.scraply.rest.dto.user.UserUpdate;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.exception.DuplicateResourceException;
 import com.scraply.rest.exception.ResourceNotFoundException;
-import com.scraply.rest.enums.UserRole;
 import com.scraply.rest.mapper.UserMapper;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
 import com.scraply.rest.security.CookieUtil;
 import com.scraply.rest.security.JwtService;
-import jakarta.persistence.Table;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,13 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Component
-public class UserUtil {
+public class UserUtility {
 
     private final UserRepository userRepository;
 
@@ -38,12 +34,9 @@ public class UserUtil {
 
     private final CookieUtil cookieUtil;
 
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final SecurityUtility securityUtility;
 
-    public User getCurrentUser() {
-        return userRepository.findById(SecurityUtil.getCurrentUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-    }
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public UserResponse create(SignUpReq request, HttpServletResponse response) {
         if (userRepository.existsByEmail(request.getEmail()))
@@ -88,10 +81,28 @@ public class UserUtil {
         return userMapper.toResponse(user);
     }
 
-    public PageResponse<PickerResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
+    public PageResponse<UserResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<PickerResponse> pickerPage = userRepository.findPickers(accountStatus, pinCode, pageable);
+        Page<UserResponse> pickerPage = userRepository.findPickers(accountStatus, pinCode, pageable);
 
         return PageResponse.from(pickerPage);
+    }
+
+    public UserResponse updateProfile(UserUpdate userUpdate) {
+        User user = securityUtility.getCurrentUser();
+
+        user = userMapper.toEntity(user, userUpdate);
+
+        userRepository.save(user);
+
+        return userMapper.toResponse(user);
+    }
+
+    public UserResponse updatePickerDetails(User picker, PickerDetailsUpdate pickerDetailsUpdate) {
+        picker = userMapper.toEntity(picker, pickerDetailsUpdate);
+
+        userRepository.save(picker);
+
+        return userMapper.toResponse(picker);
     }
 }

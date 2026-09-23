@@ -9,7 +9,8 @@ import lombok.*;
 @Entity
 @Table(name = "users",indexes = {
         @Index(name = "idx_user_mail",columnList = "email"),
-        @Index(name = "idx_picker_pinCode",columnList = "areaPinCode")
+        @Index(name = "idx_picker_pinCode",columnList = "areaPinCode"),
+        @Index(name = "idx_user_role",columnList = "userRole")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User extends BaseModel{

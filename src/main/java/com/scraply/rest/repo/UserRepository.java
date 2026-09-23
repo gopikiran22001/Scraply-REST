@@ -1,6 +1,6 @@
 package com.scraply.rest.repo;
 
-import com.scraply.rest.dto.user.PickerResponse;
+import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.model.User;
 import jakarta.validation.constraints.Email;
@@ -41,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
           AND u.status = :accountStatus
           AND (:pinCode IS NULL OR u.pinCode = :pinCode)
     """)
-    Page<PickerResponse> findPickers(
+    Page<UserResponse> findPickers(
             @Param("accountStatus") AccountStatus accountStatus,
             @Param("pinCode") Integer pinCode,
             Pageable pageable

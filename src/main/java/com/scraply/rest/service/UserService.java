@@ -2,8 +2,8 @@ package com.scraply.rest.service;
 
 import com.scraply.rest.audit.annotation.Auditable;
 import com.scraply.rest.common.PageResponse;
-import com.scraply.rest.dto.user.PickerResponse;
-import com.scraply.rest.dto.user.UpdateUser;
+import com.scraply.rest.dto.user.PickerDetailsUpdate;
+import com.scraply.rest.dto.user.UserUpdate;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.AuditAction;
@@ -11,8 +11,8 @@ import com.scraply.rest.enums.AuditEntityType;
 import com.scraply.rest.mapper.UserMapper;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
-import com.scraply.rest.utilities.SecurityUtil;
-import com.scraply.rest.utilities.UserUtil;
+import com.scraply.rest.utilities.SecurityUtility;
+import com.scraply.rest.utilities.UserUtility;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,11 +27,13 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    private final UserUtil userUtility;
+    private final UserUtility userUtility;
+
+    private final SecurityUtility securityUtility;
 
 
     public UserResponse getProfile() {
-        User user = userRepository.findById(SecurityUtil.getCurrentUserId())
+        User user = userRepository.findById(securityUtility.getCurrentUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return userMapper.toResponse(user);
     }
@@ -46,9 +48,9 @@ public class UserService {
 
     }
 
-    public PageResponse<PickerResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
+    public PageResponse<UserResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
         if (pinCode == null) {
-            User user = userUtility.getCurrentUser();
+            User user = securityUtility.getCurrentUser();
             pinCode = user.getPinCode();
         }
         return userUtility.getPickers(accountStatus, pinCode, page, limit);
@@ -56,13 +58,16 @@ public class UserService {
 
     @Auditable(action = AuditAction.UPDATE,entity = AuditEntityType.USER)
     @Transactional
-    public UserResponse updateProfile(UpdateUser updateUser) {
-        User user = userUtility.getCurrentUser();
+    public UserResponse updateProfile(UserUpdate userUpdate) {
+        return userUtility.updateProfile(userUpdate);
+    }
 
-        user = userMapper.toEntity(user, updateUser);
+    @Auditable(action = AuditAction.UPDATE,entity = AuditEntityType.USER)
+    @Transactional
+    public UserResponse updatePickerDetails(UUID pickerId, PickerDetailsUpdate pickerDetailsUpdate) {
+        User picker = userRepository.findById(pickerId)
+                .orElseThrow(() -> new RuntimeException("Picker not found"));
 
-        userRepository.save(user);
-
-        return userMapper.toResponse(user);
+        return userUtility.updatePickerDetails(picker,pickerDetailsUpdate);
     }
 }

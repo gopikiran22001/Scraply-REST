@@ -2,12 +2,12 @@ package com.scraply.rest.controller;
 
 import com.scraply.rest.common.ApiResponse;
 import com.scraply.rest.common.PageResponse;
+import com.scraply.rest.dto.user.PickerDetailsUpdate;
 import com.scraply.rest.dto.user.PickerResponse;
-import com.scraply.rest.dto.user.UpdateUser;
+import com.scraply.rest.dto.user.UserUpdate;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.service.UserService;
-import com.scraply.rest.utilities.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class UserController {
 
     @GetMapping("/get-pickers")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<PageResponse<PickerResponse>>> getPickers(
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getPickers(
             @RequestParam(defaultValue = "ACCEPTED") AccountStatus accountStatus,
             @RequestParam(required = false) Integer pinCode,
             @RequestParam(defaultValue = "0") int page,
@@ -39,8 +39,14 @@ public class UserController {
     }
 
     @PutMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody UpdateUser updateUser) {
-        return ResponseEntity.ok(ApiResponse.success("User Updated", userService.updateProfile(updateUser)));
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody UserUpdate userUpdate) {
+        return ResponseEntity.ok(ApiResponse.success("User Updated", userService.updateProfile(userUpdate)));
+    }
+
+    @PutMapping("/picker-details/{pickerId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> pickerDetails(@PathVariable UUID pickerId, @RequestBody PickerDetailsUpdate pickerDetailsUpdate) {
+        return ResponseEntity.ok(ApiResponse.success("Picker Details Updated", userService.updatePickerDetails(pickerId, pickerDetailsUpdate)));
     }
 
     @PutMapping("/account-status/{id}")

@@ -4,7 +4,8 @@ import com.scraply.rest.dto.request.NewRequestBody;
 import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.model.Request;
-import com.scraply.rest.utilities.UserUtil;
+import com.scraply.rest.utilities.SecurityUtility;
+import com.scraply.rest.utilities.UserUtility;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RequestMapper {
 
-    private final UserUtil userUtil;
+    private final SecurityUtility securityUtility;
 
     public Request toEntity(NewRequestBody newRequestBody, String imageUrl) {
         return Request.builder()
@@ -24,7 +25,7 @@ public class RequestMapper {
                 .requestType(newRequestBody.getRequestType())
                 .imageUrl(imageUrl)
                 .description(newRequestBody.getDescription())
-                .user(userUtil.getCurrentUser())
+                .user(securityUtility.getCurrentUser())
                 .address(newRequestBody.getAddress())
                 .pinCode(newRequestBody.getPinCode())
                 .landMark(newRequestBody.getLandMark())
@@ -48,6 +49,7 @@ public class RequestMapper {
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .requestStatus(request.getRequestStatus())
+                .createdAt(request.getCreatedAt())
                 .build();
         if(request.getRequestPickerAssignment() != null) {
             requestResponse.setPickerDetails(RequestResponse.PickerDetails.builder()

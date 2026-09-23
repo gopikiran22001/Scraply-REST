@@ -29,4 +29,6 @@ public class UserResponse {
 
     private Integer pinCode;
 
+    private String profileImagerUrl;
+
 }

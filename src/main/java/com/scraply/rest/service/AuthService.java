@@ -6,7 +6,7 @@ import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AuditAction;
 import com.scraply.rest.enums.AuditEntityType;
-import com.scraply.rest.utilities.UserUtil;
+import com.scraply.rest.utilities.UserUtility;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserUtil userUtility;
+    private final UserUtility userUtility;
 
     @Auditable(action = AuditAction.CREATE, entity = AuditEntityType.USER)
     public UserResponse register(SignUpReq request, HttpServletResponse response) {

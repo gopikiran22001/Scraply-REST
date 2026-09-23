@@ -8,12 +8,10 @@ import com.scraply.rest.enums.AuditAction;
 import com.scraply.rest.enums.AuditEntityType;
 import com.scraply.rest.enums.AuditStatus;
 import com.scraply.rest.repo.AuditLogRepository;
-import com.scraply.rest.utilities.SecurityUtil;
+import com.scraply.rest.utilities.SecurityUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
@@ -71,7 +69,7 @@ public class AuditAspect {
         if(auditable.action().equals(AuditAction.CREATE) && auditable.entity().equals(AuditEntityType.USER)) {
             auditLog.setUserId(entityId);
         } else {
-            auditLog.setUserId(SecurityUtil.getCurrentUserId());
+            auditLog.setUserId(SecurityUtility.getCurrentUserId());
         }
 
         auditLogRepository.save(auditLog);

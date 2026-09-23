@@ -2,8 +2,9 @@ package com.scraply.rest.mapper;
 
 import com.scraply.rest.cloud.CloudinaryService;
 import com.scraply.rest.dto.auth.SignUpReq;
+import com.scraply.rest.dto.user.PickerDetailsUpdate;
 import com.scraply.rest.dto.user.PickerResponse;
-import com.scraply.rest.dto.user.UpdateUser;
+import com.scraply.rest.dto.user.UserUpdate;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.UserRole;
@@ -62,6 +63,7 @@ public class UserMapper {
                     .pickUpRoute(user.getPickUpRoute())
                     .areaPinCode(user.getAreaPinCode())
                     .userRole(user.getUserRole())
+                     .profileImagerUrl(user.getProfileImage())
                     .build();
         }
 
@@ -74,37 +76,66 @@ public class UserMapper {
                 .address(user.getAddress())
                 .userRole(user.getUserRole())
                 .pinCode(user.getPinCode())
+                .profileImagerUrl(user.getProfileImage())
                 .build();
     }
 
-    public User toEntity(User user, UpdateUser updateUser) {
+    public User toEntity(User user, PickerDetailsUpdate update) {
 
-        if (updateUser.getFirstName() != null) {
-            user.setFirstName(updateUser.getFirstName());
+        if (update == null) {
+            return user;
         }
 
-        if (updateUser.getLastName() != null) {
-            user.setLastName(updateUser.getLastName());
+        if (update.getVehicleType() != null
+                && !update.getVehicleType().isBlank()) {
+            user.setVehicleType(update.getVehicleType());
         }
 
-        if (updateUser.getEmail() != null) {
-            user.setEmail(updateUser.getEmail());
+        if (update.getVehicleNumber() != null
+                && !update.getVehicleNumber().isBlank()) {
+            user.setVehicleNumber(update.getVehicleNumber());
         }
 
-        if (updateUser.getPhone() != null) {
-            user.setPhone(updateUser.getPhone());
+        if (update.getPickUpRoute() != null
+                && !update.getPickUpRoute().isBlank()) {
+            user.setPickUpRoute(update.getPickUpRoute());
         }
 
-        if (updateUser.getAddress() != null) {
-            user.setAddress(updateUser.getAddress());
+        if (update.getAreaPinCode() != null) {
+            user.setAreaPinCode(update.getAreaPinCode());
         }
 
-        if (updateUser.getPinCode() != null) {
-            user.setPinCode(updateUser.getPinCode());
+        return user;
+    }
+
+    public User toEntity(User user, UserUpdate userUpdate) {
+
+        if (userUpdate.getFirstName() != null) {
+            user.setFirstName(userUpdate.getFirstName());
         }
 
-        if(updateUser.getProfileImage()!=null){
-            String imageUrl = cloudinaryService.uploadImage(updateUser.getProfileImage(),"scraply/profile");
+        if (userUpdate.getLastName() != null) {
+            user.setLastName(userUpdate.getLastName());
+        }
+
+        if (userUpdate.getEmail() != null) {
+            user.setEmail(userUpdate.getEmail());
+        }
+
+        if (userUpdate.getPhone() != null) {
+            user.setPhone(userUpdate.getPhone());
+        }
+
+        if (userUpdate.getAddress() != null) {
+            user.setAddress(userUpdate.getAddress());
+        }
+
+        if (userUpdate.getPinCode() != null) {
+            user.setPinCode(userUpdate.getPinCode());
+        }
+
+        if(userUpdate.getProfileImage()!=null){
+            String imageUrl = cloudinaryService.uploadImage(userUpdate.getProfileImage(),"scraply/profile");
             user.setProfileImage(imageUrl);
         }
 
