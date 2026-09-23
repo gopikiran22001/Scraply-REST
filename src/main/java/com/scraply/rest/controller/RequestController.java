@@ -58,7 +58,7 @@ public class RequestController {
             @PathVariable UUID id,
             @RequestParam RequestStatus requestStatus,
             @RequestParam(required = false) UUID pickerId,
-            
+
             ) {
         return ResponseEntity.ok(ApiResponse.success("Picker Assigned", requestService.assignPicker(requestPickerAssignmentBody)));
     }
