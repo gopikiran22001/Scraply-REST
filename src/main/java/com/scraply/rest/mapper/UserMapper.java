@@ -1,7 +1,9 @@
 package com.scraply.rest.mapper;
 
+import com.scraply.rest.cloud.CloudinaryService;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.PickerResponse;
+import com.scraply.rest.dto.user.UpdateUser;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.UserRole;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    private final CloudinaryService cloudinaryService;
 
 
     public User toEntity(SignUpReq request) {
@@ -71,5 +75,39 @@ public class UserMapper {
                 .userRole(user.getUserRole())
                 .pinCode(user.getPinCode())
                 .build();
+    }
+
+    public User toEntity(User user, UpdateUser updateUser) {
+
+        if (updateUser.getFirstName() != null) {
+            user.setFirstName(updateUser.getFirstName());
+        }
+
+        if (updateUser.getLastName() != null) {
+            user.setLastName(updateUser.getLastName());
+        }
+
+        if (updateUser.getEmail() != null) {
+            user.setEmail(updateUser.getEmail());
+        }
+
+        if (updateUser.getPhone() != null) {
+            user.setPhone(updateUser.getPhone());
+        }
+
+        if (updateUser.getAddress() != null) {
+            user.setAddress(updateUser.getAddress());
+        }
+
+        if (updateUser.getPinCode() != null) {
+            user.setPinCode(updateUser.getPinCode());
+        }
+
+        if(updateUser.getProfileImage()!=null){
+            String imageUrl = cloudinaryService.uploadImage(updateUser.getProfileImage(),"scraply/profile");
+            user.setProfileImage(imageUrl);
+        }
+
+        return user;
     }
 }

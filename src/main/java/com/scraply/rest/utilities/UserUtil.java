@@ -1,7 +1,9 @@
 package com.scraply.rest.utilities;
 
+import com.scraply.rest.common.PageResponse;
 import com.scraply.rest.dto.auth.SignInReq;
 import com.scraply.rest.dto.auth.SignUpReq;
+import com.scraply.rest.dto.user.PickerResponse;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.exception.DuplicateResourceException;
@@ -15,6 +17,9 @@ import com.scraply.rest.security.JwtService;
 import jakarta.persistence.Table;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,5 +86,12 @@ public class UserUtil {
     public UserResponse setAccountStatus(User user, AccountStatus accountStatus) {
         user.setStatus(accountStatus);
         return userMapper.toResponse(user);
+    }
+
+    public PageResponse<PickerResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        Page<PickerResponse> pickerPage = userRepository.findPickers(accountStatus, pinCode, pageable);
+
+        return PageResponse.from(pickerPage);
     }
 }

@@ -1,11 +1,15 @@
 package com.scraply.rest.controller;
 
 import com.scraply.rest.common.ApiResponse;
+import com.scraply.rest.common.PageResponse;
+import com.scraply.rest.dto.user.PickerResponse;
+import com.scraply.rest.dto.user.UpdateUser;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.service.UserService;
-import jakarta.servlet.http.HttpServletResponse;
+import com.scraply.rest.utilities.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +26,21 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<UserResponse>> user() {
         return ResponseEntity.ok(ApiResponse.success("User Info", userService.getProfile()));
+    }
+
+    @GetMapping("/get-pickers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PageResponse<PickerResponse>>> getPickers(
+            @RequestParam(defaultValue = "ACCEPTED") AccountStatus accountStatus,
+            @RequestParam(required = false) Integer pinCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(ApiResponse.success("Pickers List", userService.getPickers(accountStatus, pinCode, page, limit)));
+    }
+
+    @PutMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody UpdateUser updateUser) {
+        return ResponseEntity.ok(ApiResponse.success("User Updated", userService.updateProfile(updateUser)));
     }
 
     @PutMapping("/account-status/{id}")

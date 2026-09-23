@@ -1,6 +1,9 @@
 package com.scraply.rest.service;
 
 import com.scraply.rest.audit.annotation.Auditable;
+import com.scraply.rest.common.PageResponse;
+import com.scraply.rest.dto.user.PickerResponse;
+import com.scraply.rest.dto.user.UpdateUser;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.AuditAction;
@@ -41,5 +44,25 @@ public class UserService {
 
         return userUtility.setAccountStatus(user,accountStatus);
 
+    }
+
+    public PageResponse<PickerResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
+        if (pinCode == null) {
+            User user = userUtility.getCurrentUser();
+            pinCode = user.getPinCode();
+        }
+        return userUtility.getPickers(accountStatus, pinCode, page, limit);
+    }
+
+    @Auditable(action = AuditAction.UPDATE,entity = AuditEntityType.USER)
+    @Transactional
+    public UserResponse updateProfile(UpdateUser updateUser) {
+        User user = userUtility.getCurrentUser();
+
+        user = userMapper.toEntity(user, updateUser);
+
+        userRepository.save(user);
+
+        return userMapper.toResponse(user);
     }
 }
