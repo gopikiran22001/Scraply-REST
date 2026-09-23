@@ -9,8 +9,8 @@ import lombok.*;
 @Entity
 @Table(name = "users",indexes = {
         @Index(name = "idx_user_mail",columnList = "email"),
-        @Index(name = "idx_picker_pinCode",columnList = "areaPinCode"),
-        @Index(name = "idx_user_role",columnList = "userRole")
+        @Index(name = "idx_picker_pinCode",columnList = "area_pin_code"),
+        @Index(name = "idx_user_role",columnList = "user_role")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User extends BaseModel{
@@ -31,7 +31,7 @@ public class User extends BaseModel{
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false,name = "user_role")
     private UserRole userRole;
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +50,8 @@ public class User extends BaseModel{
     private String vehicleNumber;
     private String vehicleType;
     private String pickUpRoute;
+
+    @Column(name = "area_pin_code")
     private Integer areaPinCode;
 
     @Override

@@ -8,6 +8,8 @@ import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.AuditAction;
 import com.scraply.rest.enums.AuditEntityType;
+import com.scraply.rest.enums.UserRole;
+import com.scraply.rest.exception.UnauthorizedException;
 import com.scraply.rest.mapper.UserMapper;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
@@ -67,6 +69,9 @@ public class UserService {
     public UserResponse updatePickerDetails(UUID pickerId, PickerDetailsUpdate pickerDetailsUpdate) {
         User picker = userRepository.findById(pickerId)
                 .orElseThrow(() -> new RuntimeException("Picker not found"));
+        if(!UserRole.PICKER.equals(picker.getUserRole())) {
+            throw new UnauthorizedException("Not authorized");
+        }
 
         return userUtility.updatePickerDetails(picker,pickerDetailsUpdate);
     }

@@ -34,12 +34,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             u.vehicleType,
             u.vehicleNumber,
             u.pickUpRoute,
-            u.areaPinCode
+            u.areaPinCode,
+            u.profileImage
         )
         FROM User u
         WHERE u.userRole = UserRole.PICKER
           AND u.status = :accountStatus
-          AND (:pinCode IS NULL OR u.pinCode = :pinCode)
+          AND (:pinCode IS NULL OR u.areaPinCode = :pinCode)
     """)
     Page<UserResponse> findPickers(
             @Param("accountStatus") AccountStatus accountStatus,

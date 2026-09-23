@@ -5,7 +5,6 @@ import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.model.Request;
 import com.scraply.rest.utilities.SecurityUtility;
-import com.scraply.rest.utilities.UserUtility;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;

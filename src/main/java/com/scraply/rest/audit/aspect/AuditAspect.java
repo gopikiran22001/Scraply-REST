@@ -27,6 +27,8 @@ import java.util.UUID;
 public class AuditAspect {
     private final AuditLogRepository auditLogRepository;
 
+    private  final SecurityUtility securityUtility;
+
     @Around("@annotation(auditable)")
     public Object audit(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
         Object result = joinPoint.proceed();
@@ -69,7 +71,7 @@ public class AuditAspect {
         if(auditable.action().equals(AuditAction.CREATE) && auditable.entity().equals(AuditEntityType.USER)) {
             auditLog.setUserId(entityId);
         } else {
-            auditLog.setUserId(SecurityUtility.getCurrentUserId());
+            auditLog.setUserId(securityUtility.getCurrentUserId());
         }
 
         auditLogRepository.save(auditLog);

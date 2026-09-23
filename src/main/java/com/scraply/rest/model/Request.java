@@ -9,8 +9,8 @@ import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name="requests",indexes = {
-        @Index(name = "idx_request_pinCode", columnList = "pinCode"),
-        @Index(name = "idx_request_status", columnList = "requestStatus")
+        @Index(name = "idx_request_pinCode", columnList = "pin_code"),
+        @Index(name = "idx_request_status", columnList = "request_status")
 })
 @Getter
 @Setter
@@ -35,7 +35,7 @@ public class Request extends BaseModel{
     @Enumerated(EnumType.STRING)
     private RequestCategory requestCategory;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "request_status")
     @Enumerated(EnumType.STRING)
     private RequestStatus requestStatus;
 
@@ -48,7 +48,7 @@ public class Request extends BaseModel{
     @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "pin_code")
     private Integer pinCode;
 
     @Column(columnDefinition = "TEXT")

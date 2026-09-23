@@ -8,6 +8,7 @@ import com.scraply.rest.dto.user.UserUpdate;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class UserController {
     }
 
     @PutMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody UserUpdate userUpdate) {
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@Valid @ModelAttribute UserUpdate userUpdate) {
         return ResponseEntity.ok(ApiResponse.success("User Updated", userService.updateProfile(userUpdate)));
     }
 

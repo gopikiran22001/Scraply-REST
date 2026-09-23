@@ -32,7 +32,8 @@ public class PickerResponse extends UserResponse {
             String vehicleType,
             String vehicleNumber,
             String pickUpRoute,
-            Integer areaPinCode) {
+            Integer areaPinCode,
+            String imageUrl) {
 
         super(
                 id,
@@ -42,7 +43,8 @@ public class PickerResponse extends UserResponse {
                 phone,
                 address,
                 userRole,
-                pinCode
+                pinCode,
+                imageUrl
         );
 
         this.vehicleType = vehicleType;

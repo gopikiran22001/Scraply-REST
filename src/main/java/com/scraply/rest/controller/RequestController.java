@@ -5,6 +5,7 @@ import com.scraply.rest.common.PageResponse;
 import com.scraply.rest.dto.request.NewRequestBody;
 import com.scraply.rest.dto.request.RequestPickerAssignmentBody;
 import com.scraply.rest.dto.request.RequestResponse;
+import com.scraply.rest.enums.CancellationReason;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.service.RequestService;
 import jakarta.validation.Valid;
@@ -53,14 +54,16 @@ public class RequestController {
     }
 
     @PutMapping("/request-update/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','AGENT')")
+    @PreAuthorize("hasAnyRole('ADMIN','AGENT','PICKER')")
     public ResponseEntity<ApiResponse<RequestResponse>> assignPicker(
             @PathVariable UUID id,
             @RequestParam RequestStatus requestStatus,
             @RequestParam(required = false) UUID pickerId,
-
+            @RequestParam(required = false) String reason,
+            @RequestParam(required = false) CancellationReason cancellationReason,
+            @RequestParam(required = false) String remarks
             ) {
-        return ResponseEntity.ok(ApiResponse.success("Picker Assigned", requestService.assignPicker(requestPickerAssignmentBody)));
+        return ResponseEntity.ok(ApiResponse.success("Request Updated", requestService.update(id,requestStatus, pickerId, reason, cancellationReason, remarks)));
     }
 
 }

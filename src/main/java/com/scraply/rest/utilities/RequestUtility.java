@@ -6,6 +6,7 @@ import com.scraply.rest.dto.request.NewRequestBody;
 import com.scraply.rest.dto.request.RequestPickerAssignmentBody;
 import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.enums.AccountStatus;
+import com.scraply.rest.enums.CancellationReason;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.enums.UserRole;
 import com.scraply.rest.exception.BusinessException;
@@ -13,8 +14,10 @@ import com.scraply.rest.exception.ResourceNotFoundException;
 import com.scraply.rest.exception.UnauthorizedException;
 import com.scraply.rest.mapper.RequestMapper;
 import com.scraply.rest.model.Request;
+import com.scraply.rest.model.RequestCancellation;
 import com.scraply.rest.model.RequestPickerAssignment;
 import com.scraply.rest.model.User;
+import com.scraply.rest.repo.RequestCancellationRepository;
 import com.scraply.rest.repo.RequestPickerAssignmentRepository;
 import com.scraply.rest.repo.RequestRepository;
 import com.scraply.rest.repo.UserRepository;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.AccessDeniedException;
 import java.time.Instant;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -37,6 +41,8 @@ public class RequestUtility {
     private final RequestRepository requestRepository;
 
     private final UserRepository userRepository;
+
+    private final RequestCancellationRepository requestCancellationRepository;
 
     private final SecurityUtility securityUtility;
 
@@ -56,11 +62,8 @@ public class RequestUtility {
 
     }
 
-    public RequestResponse update(RequestPickerAssignmentBody requestPickerAssignmentBody) {
-        Request request = requestRepository.findById(requestPickerAssignmentBody.getRequestId())
-                .orElseThrow(()->new ResourceNotFoundException("Request Not Found"));
-
-        User picker = userRepository.findById(requestPickerAssignmentBody.getPickerId())
+    private void assignPicker(Request request, UUID pickerId, String reason) {
+        User picker = userRepository.findById(pickerId)
                 .orElseThrow(()->new ResourceNotFoundException("Picker Not Found"));
 
         if(!AccountStatus.ACCEPTED.equals(picker.getStatus())) {
@@ -70,24 +73,73 @@ public class RequestUtility {
         if(!UserRole.PICKER.equals(picker.getUserRole())) {
             throw new BusinessException("User is not a picker");
         }
+        if(request.getRequestPickerAssignment()!=null){
+            RequestPickerAssignment requestPickerAssignment = request.getRequestPickerAssignment();
+            if(requestPickerAssignment.getPicker().getId().equals(picker.getId())) {
+                throw new BusinessException("Picker Assignment already exists");
+            }
+            requestPickerAssignment.setActive(false);
+            requestPickerAssignmentRepository.save(requestPickerAssignment);
+        }
 
         RequestPickerAssignment requestPickerAssignment = RequestPickerAssignment.builder()
                 .request(request)
                 .picker(picker)
-                .reason(requestPickerAssignmentBody.getReason())
+                .reason(reason)
                 .active(true)
                 .build();
-
-        if(request.getRequestPickerAssignment()!=null){
-            RequestPickerAssignment requestPickerAssignment1 = request.getRequestPickerAssignment();
-            requestPickerAssignment1.setActive(false);
-            requestPickerAssignmentRepository.save(requestPickerAssignment1);
-        }
         requestPickerAssignmentRepository.save(requestPickerAssignment);
         request.setRequestPickerAssignment(requestPickerAssignment);
         request.setRequestStatus(RequestStatus.ASSIGNED);
-        requestRepository.save(request);
+    }
 
+    private void cancelRequest(Request request, CancellationReason  reason, String remarks) {
+        if(reason==null){
+            throw new BusinessException("Reason cannot be null");
+        }
+        RequestCancellation requestCancellation = RequestCancellation.builder()
+                .request(request)
+                .cancelledBy(securityUtility.getCurrentUser())
+                .reason(reason)
+                .requestPickerAssignment(request.getRequestPickerAssignment())
+                .remarks(remarks)
+                .build();
+        requestCancellationRepository.save(requestCancellation);
+        if(request.getRequestPickerAssignment()!=null){
+            RequestPickerAssignment requestPickerAssignment = request.getRequestPickerAssignment();
+            requestPickerAssignment.setActive(false);
+            requestPickerAssignmentRepository.save(requestPickerAssignment);
+        }
+        request.setRequestStatus(RequestStatus.CANCELLED);
+    }
+
+    private void checkPicker(Request request, User picker) {
+        if(request.getRequestPickerAssignment()==null ||
+                !request.getRequestPickerAssignment().isActive() ||
+                !request.getRequestPickerAssignment().getPicker().getId().equals(picker.getId())) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+    }
+
+    public RequestResponse update(Request request, RequestStatus requestStatus, UUID pickerId, String reason, CancellationReason cancellationReason, String remarks) {
+        User user = securityUtility.getCurrentUser();
+        if(UserRole.PICKER.equals(user.getUserRole())) {
+            checkPicker(request,user);
+            switch (requestStatus) {
+                case COMPLETED -> request.setRequestStatus(RequestStatus.COMPLETED);
+                case CANCELLED -> cancelRequest(request, cancellationReason,remarks);
+                default -> throw new BusinessException("Request Status Not Implemented");
+            }
+        } else {
+            switch (requestStatus) {
+                case IN_PROGRESS -> request.setRequestStatus(RequestStatus.IN_PROGRESS);
+                case ASSIGNED -> assignPicker(request, pickerId, reason);
+                case COMPLETED -> request.setRequestStatus(RequestStatus.COMPLETED);
+                case CANCELLED -> cancelRequest(request,cancellationReason,remarks);
+                default -> throw new BusinessException("Request Status Not Implemented");
+            }
+        }
+        requestRepository.save(request);
 
         return requestMapper.toResponse(request);
     }
