@@ -9,11 +9,14 @@ import com.scraply.rest.enums.CancellationReason;
 import com.scraply.rest.enums.RequestStatus;
 import com.scraply.rest.service.RequestService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -22,6 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/request")
 @RequiredArgsConstructor
+@Validated
 public class RequestController {
 
     private final RequestService requestService;
@@ -47,15 +51,15 @@ public class RequestController {
             @RequestParam(required = false) Integer pinCode,
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit
             ) {
         return ResponseEntity.ok(ApiResponse.success("Requests List", requestService.getAllRequests(requestStatus, pinCode, startTime, endTime, page, limit)));
     }
 
     @PutMapping("/request-update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','AGENT','PICKER')")
-    public ResponseEntity<ApiResponse<RequestResponse>> assignPicker(
+    public ResponseEntity<ApiResponse<RequestResponse>> updateRequest(
             @PathVariable UUID id,
             @RequestParam RequestStatus requestStatus,
             @RequestParam(required = false) UUID pickerId,

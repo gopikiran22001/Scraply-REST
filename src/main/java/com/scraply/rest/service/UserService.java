@@ -15,9 +15,9 @@ import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
 import com.scraply.rest.utilities.SecurityUtility;
 import com.scraply.rest.utilities.UserUtility;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -34,6 +34,7 @@ public class UserService {
     private final SecurityUtility securityUtility;
 
 
+    @Transactional(readOnly = true)
     public UserResponse getProfile() {
         User user = userRepository.findById(securityUtility.getCurrentUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -50,6 +51,7 @@ public class UserService {
 
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponse> getPickers(AccountStatus accountStatus, Integer pinCode, int page, int limit) {
         if (pinCode == null) {
             User user = securityUtility.getCurrentUser();

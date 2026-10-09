@@ -70,6 +70,10 @@ public class RequestUtility {
             throw new ResourceNotFoundException("Picker Not Accepted");
         }
 
+        if(!request.getRequestStatus().equals(RequestStatus.IN_PROGRESS)) {
+            throw new BusinessException("Request Status Not In Progress");
+        }
+
         if(!UserRole.PICKER.equals(picker.getUserRole())) {
             throw new BusinessException("User is not a picker");
         }
@@ -113,7 +117,7 @@ public class RequestUtility {
         request.setRequestStatus(RequestStatus.CANCELLED);
     }
 
-    private void checkPicker(Request request, User picker) {
+    private void checkPickerForRequest(Request request, User picker) {
         if(request.getRequestPickerAssignment()==null ||
                 !request.getRequestPickerAssignment().isActive() ||
                 !request.getRequestPickerAssignment().getPicker().getId().equals(picker.getId())) {
@@ -121,20 +125,30 @@ public class RequestUtility {
         }
     }
 
+    private void completeRequest(Request request) {
+        if(!request.getRequestStatus().equals(RequestStatus.ASSIGNED)) {
+            throw new BusinessException("Request Status Not In Assigned");
+        }
+        request.setRequestStatus(RequestStatus.COMPLETED);
+    }
+
+    private void inProgressRequest(Request request) {
+        request.setRequestStatus(RequestStatus.IN_PROGRESS);
+    }
+
     public RequestResponse update(Request request, RequestStatus requestStatus, UUID pickerId, String reason, CancellationReason cancellationReason, String remarks) {
         User user = securityUtility.getCurrentUser();
         if(UserRole.PICKER.equals(user.getUserRole())) {
-            checkPicker(request,user);
+            checkPickerForRequest(request,user);
             switch (requestStatus) {
-                case COMPLETED -> request.setRequestStatus(RequestStatus.COMPLETED);
+                case COMPLETED -> completeRequest(request);
                 case CANCELLED -> cancelRequest(request, cancellationReason,remarks);
                 default -> throw new BusinessException("Request Status Not Implemented");
             }
         } else {
             switch (requestStatus) {
-                case IN_PROGRESS -> request.setRequestStatus(RequestStatus.IN_PROGRESS);
+                case IN_PROGRESS -> inProgressRequest(request);
                 case ASSIGNED -> assignPicker(request, pickerId, reason);
-                case COMPLETED -> request.setRequestStatus(RequestStatus.COMPLETED);
                 case CANCELLED -> cancelRequest(request,cancellationReason,remarks);
                 default -> throw new BusinessException("Request Status Not Implemented");
             }
