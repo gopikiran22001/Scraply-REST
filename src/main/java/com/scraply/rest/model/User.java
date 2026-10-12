@@ -69,7 +69,7 @@ public class User extends BaseModel{
     }
 
     private void pickerCheck() {
-        if(this.userRole.equals(UserRole.PICKER)) {
+        if(UserRole.PICKER.equals(this.userRole)) {
             if (this.vehicleNumber == null || this.vehicleNumber.isBlank()) {
                 throw new IllegalStateException("A Picker must have a valid vehicle number assigned.");
             }

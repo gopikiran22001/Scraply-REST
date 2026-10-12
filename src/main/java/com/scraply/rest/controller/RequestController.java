@@ -58,7 +58,6 @@ public class RequestController {
     }
 
     @PutMapping("/request-update/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','AGENT','PICKER')")
     public ResponseEntity<ApiResponse<RequestResponse>> updateRequest(
             @PathVariable UUID id,
             @RequestParam RequestStatus requestStatus,

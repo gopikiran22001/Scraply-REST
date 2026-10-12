@@ -11,6 +11,7 @@ import com.scraply.rest.repo.AuditLogRepository;
 import com.scraply.rest.utilities.SecurityUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,6 +25,7 @@ import java.util.UUID;
 @Aspect
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class AuditAspect {
     private final AuditLogRepository auditLogRepository;
 
@@ -31,15 +33,25 @@ public class AuditAspect {
 
     @Around("@annotation(auditable)")
     public Object audit(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
-        Object result = joinPoint.proceed();
+        Object result;
         try {
-            saveAudit(auditable,AuditStatus.SUCCESS,extractEntityId(result),null);
-
-            return result;
-        } catch (Exception exception) {
-            saveAudit(auditable,AuditStatus.FAILURE,extractEntityId(result),exception.getMessage());
+            result = joinPoint.proceed();
+        } catch (Throwable exception) {
+            try {
+                saveAudit(auditable, AuditStatus.FAILURE, null, exception.getMessage());
+            } catch (Exception auditException) {
+                log.error("Failed to persist failure audit for {}", auditable.action(), auditException);
+            }
             throw exception;
         }
+
+        try {
+            saveAudit(auditable, AuditStatus.SUCCESS, extractEntityId(result), null);
+        } catch (Exception auditException) {
+            log.error("Failed to persist success audit for {}", auditable.action(), auditException);
+        }
+
+        return result;
     }
 
     private UUID extractEntityId(Object result) {
@@ -68,7 +80,7 @@ public class AuditAspect {
                 .timestamp(Instant.now())
                 .build();
 
-        if(auditable.action().equals(AuditAction.CREATE) && auditable.entity().equals(AuditEntityType.USER)) {
+        if(AuditAction.CREATE.equals(auditable.action()) && AuditEntityType.USER.equals(auditable.entity())) {
             auditLog.setUserId(entityId);
         } else {
             auditLog.setUserId(securityUtility.getCurrentUserId());

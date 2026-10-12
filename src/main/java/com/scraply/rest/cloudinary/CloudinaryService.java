@@ -1,10 +1,9 @@
-package com.scraply.rest.cloud;
+package com.scraply.rest.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.scraply.rest.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,6 +47,11 @@ public class CloudinaryService {
      * @throws BadRequestException if upload fails
      */
     public String uploadImage(MultipartFile file) {
+        try {
+            validateImage(file);
+        } catch (Exception e) {
+            throw new BadRequestException("Error uploading image");
+        }
         return uploadImage(file, folderPath);
     }
 
@@ -73,8 +77,7 @@ public class CloudinaryService {
                     )
             );
 
-            String secureUrl = (String) uploadResult.get("secure_url");
-            return secureUrl;
+            return (String) uploadResult.get("secure_url");
 
         } catch (IOException e) {
             throw new BadRequestException("Failed to upload image: " + e.getMessage());

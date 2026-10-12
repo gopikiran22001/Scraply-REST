@@ -1,9 +1,8 @@
 package com.scraply.rest.utilities;
 
-import com.scraply.rest.cloud.CloudinaryService;
+import com.scraply.rest.cloudinary.CloudinaryService;
 import com.scraply.rest.common.PageResponse;
 import com.scraply.rest.dto.request.NewRequestBody;
-import com.scraply.rest.dto.request.RequestPickerAssignmentBody;
 import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.enums.AccountStatus;
 import com.scraply.rest.enums.CancellationReason;
@@ -17,6 +16,7 @@ import com.scraply.rest.model.Request;
 import com.scraply.rest.model.RequestCancellation;
 import com.scraply.rest.model.RequestPickerAssignment;
 import com.scraply.rest.model.User;
+import com.scraply.rest.redis.RedisQueueProducer;
 import com.scraply.rest.repo.RequestCancellationRepository;
 import com.scraply.rest.repo.RequestPickerAssignmentRepository;
 import com.scraply.rest.repo.RequestRepository;
@@ -28,7 +28,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -50,6 +49,12 @@ public class RequestUtility {
 
     private final RequestMapper requestMapper;
 
+    private final RedisQueueProducer  redisQueueProducer;
+
+    private void requested(Request request) {
+        request.setRequestStatus(RequestStatus.REQUESTED);
+        redisQueueProducer.publishRequested(request.getId());
+    }
 
     public RequestResponse create(NewRequestBody newRequestBody) {
         String imageUrl = cloudinaryService.uploadImage(newRequestBody.getImage());
@@ -57,6 +62,8 @@ public class RequestUtility {
         Request request = requestMapper.toEntity(newRequestBody, imageUrl);
 
         requestRepository.save(request);
+
+        redisQueueProducer.publishRequested(request.getId());
 
         return requestMapper.toResponse(request);
 
@@ -70,8 +77,9 @@ public class RequestUtility {
             throw new ResourceNotFoundException("Picker Not Accepted");
         }
 
-        if(!request.getRequestStatus().equals(RequestStatus.IN_PROGRESS)) {
-            throw new BusinessException("Request Status Not In Progress");
+        if(!RequestStatus.IN_PROGRESS.equals(request.getRequestStatus()) &&
+                !RequestStatus.ASSIGNED.equals(request.getRequestStatus())) {
+            throw new BusinessException("Request Status is not Applicable to Assign");
         }
 
         if(!UserRole.PICKER.equals(picker.getUserRole())) {
@@ -117,29 +125,45 @@ public class RequestUtility {
         request.setRequestStatus(RequestStatus.CANCELLED);
     }
 
-    private void checkPickerForRequest(Request request, User picker) {
+    private void checkPickerForRequest(Request request, UUID pickerId) {
         if(request.getRequestPickerAssignment()==null ||
                 !request.getRequestPickerAssignment().isActive() ||
-                !request.getRequestPickerAssignment().getPicker().getId().equals(picker.getId())) {
+                !request.getRequestPickerAssignment().getPicker().getId().equals(pickerId)) {
             throw new UnauthorizedException("Unauthorized");
         }
     }
 
     private void completeRequest(Request request) {
-        if(!request.getRequestStatus().equals(RequestStatus.ASSIGNED)) {
+        if(!RequestStatus.ASSIGNED.equals(request.getRequestStatus())) {
             throw new BusinessException("Request Status Not In Assigned");
         }
         request.setRequestStatus(RequestStatus.COMPLETED);
     }
 
     private void inProgressRequest(Request request) {
+        if(!RequestStatus.REQUESTED.equals(request.getRequestStatus())) {
+            throw new BusinessException("Request Status Not In Requested");
+        }
         request.setRequestStatus(RequestStatus.IN_PROGRESS);
+        redisQueueProducer.publishInProgress(request.getId());
     }
 
     public RequestResponse update(Request request, RequestStatus requestStatus, UUID pickerId, String reason, CancellationReason cancellationReason, String remarks) {
-        User user = securityUtility.getCurrentUser();
-        if(UserRole.PICKER.equals(user.getUserRole())) {
-            checkPickerForRequest(request,user);
+        UserRole userRole = securityUtility.getUserRole();
+        UUID currentUserId = securityUtility.getCurrentUserId();
+
+        if(UserRole.USER.equals(userRole)) {
+            if(!currentUserId.equals(request.getUser().getId())) {
+                throw new UnauthorizedException("Unauthorized");
+            }
+            if(!RequestStatus.IN_PROGRESS.equals(request.getRequestStatus()) &&
+            !RequestStatus.REQUESTED.equals(request.getRequestStatus())) {
+                throw new BusinessException("Request Status Not is Applicable to Cancel");
+            }
+            cancelRequest(request,cancellationReason,remarks);
+        }
+        else if(UserRole.PICKER.equals(userRole)) {
+            checkPickerForRequest(request, currentUserId);
             switch (requestStatus) {
                 case COMPLETED -> completeRequest(request);
                 case CANCELLED -> cancelRequest(request, cancellationReason,remarks);
@@ -159,11 +183,12 @@ public class RequestUtility {
     }
 
     public RequestResponse getRequest(Request request) {
-        User user = securityUtility.getCurrentUser();
+        UUID currentUserId = securityUtility.getCurrentUserId();
+        UserRole userRole = securityUtility.getUserRole();
 
-        if(user.getId().equals(request.getUser().getId()) ||
-                UserRole.ADMIN.equals(user.getUserRole()) ||
-                (UserRole.PICKER.equals(user.getUserRole()) && request.getRequestPickerAssignment()!=null && request.getRequestPickerAssignment().getPicker().getId().equals(user.getId()))
+        if(currentUserId.equals(request.getUser().getId()) ||
+                UserRole.ADMIN.equals(userRole) ||
+                (UserRole.PICKER.equals(userRole) && request.getRequestPickerAssignment()!=null && request.getRequestPickerAssignment().getPicker().getId().equals(currentUserId))
            ) {
             return requestMapper.toResponse(request);
         }
@@ -179,16 +204,17 @@ public class RequestUtility {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        User user = securityUtility.getCurrentUser();
+        UserRole userRole = securityUtility.getUserRole();
+        UUID currentUserId = securityUtility.getCurrentUserId();
 
-        Page<RequestResponse> requestList ;
+        Page<RequestResponse> requestList;
 
-        if(UserRole.ADMIN.equals(user.getUserRole())) {
+        if(UserRole.ADMIN.equals(userRole)) {
             requestList = requestRepository.findAllRequestsForAdmin(requestStatus, pinCode, startTime, endTime, pageable);
-        } else if (UserRole.PICKER.equals(user.getUserRole())) {
-            requestList = requestRepository.findAllRequestsByPicker(user.getId(), requestStatus, pinCode, startTime, endTime, pageable);
+        } else if (UserRole.PICKER.equals(userRole)) {
+            requestList = requestRepository.findAllRequestsByPicker(currentUserId, requestStatus, pinCode, startTime, endTime, pageable);
         } else {
-            requestList = requestRepository.findAllRequestsByUser(user.getId(), requestStatus, pinCode, startTime, endTime, pageable);
+            requestList = requestRepository.findAllRequestsByUser(currentUserId, requestStatus, pinCode, startTime, endTime, pageable);
         }
         return PageResponse.from(requestList);
     }

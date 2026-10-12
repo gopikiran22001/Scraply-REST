@@ -1,4 +1,4 @@
-package com.scraply.rest.cloud;
+package com.scraply.rest.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Value;

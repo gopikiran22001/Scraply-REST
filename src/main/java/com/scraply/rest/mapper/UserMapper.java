@@ -1,6 +1,6 @@
 package com.scraply.rest.mapper;
 
-import com.scraply.rest.cloud.CloudinaryService;
+import com.scraply.rest.cloudinary.CloudinaryService;
 import com.scraply.rest.dto.auth.SignUpReq;
 import com.scraply.rest.dto.user.PickerDetailsUpdate;
 import com.scraply.rest.dto.user.PickerResponse;
@@ -41,7 +41,7 @@ public class UserMapper {
                 .areaPinCode(request.getAreaPinCode())
                 .userRole(request.getUserRole()==null?UserRole.USER:request.getUserRole())
                 .build();
-        if (user.getUserRole().equals(UserRole.ADMIN) || user.getUserRole().equals(UserRole.PICKER))
+        if (UserRole.ADMIN.equals(user.getUserRole()) || UserRole.PICKER.equals(user.getUserRole()))
             user.setStatus(AccountStatus.PENDING);
         else
             user.setStatus(AccountStatus.ACCEPTED);
@@ -49,7 +49,7 @@ public class UserMapper {
     }
 
     public UserResponse toResponse(User user) {
-        if(user.getUserRole().equals(UserRole.PICKER)) {
+        if(UserRole.PICKER.equals(user.getUserRole())) {
              return PickerResponse.builder()
                     .id(user.getId())
                     .firstName(user.getFirstName())

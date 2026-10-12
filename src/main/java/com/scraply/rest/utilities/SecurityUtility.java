@@ -1,5 +1,6 @@
 package com.scraply.rest.utilities;
 
+import com.scraply.rest.enums.UserRole;
 import com.scraply.rest.exception.ResourceNotFoundException;
 import com.scraply.rest.model.User;
 import com.scraply.rest.repo.UserRepository;
@@ -25,7 +26,17 @@ public class SecurityUtility {
             throw new IllegalStateException("No authenticated user found");
         }
 
-        return UUID.fromString(userDetails.getUsername());
+        return userDetails.getUserId();
+    }
+
+    public UserRole getUserRole() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
+        return userDetails.getRole();
     }
 
     public User getCurrentUser() {
