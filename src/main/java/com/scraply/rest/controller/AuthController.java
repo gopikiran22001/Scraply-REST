@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController()
@@ -23,11 +22,6 @@ public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
-
-    @GetMapping("/csrf")
-    public CsrfToken csrf(CsrfToken token) {
-        return token;
-    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody SignUpReq request, HttpServletResponse response) {

@@ -1,13 +1,12 @@
 package com.scraply.rest.audit.aspect;
 
 import com.scraply.rest.audit.annotation.Auditable;
-import com.scraply.rest.audit.document.AuditLog;
+import com.scraply.rest.audit.outbox.AuditOutboxService;
 import com.scraply.rest.dto.request.RequestResponse;
 import com.scraply.rest.dto.user.UserResponse;
 import com.scraply.rest.enums.AuditAction;
 import com.scraply.rest.enums.AuditEntityType;
 import com.scraply.rest.enums.AuditStatus;
-import com.scraply.rest.repo.AuditLogRepository;
 import com.scraply.rest.utilities.SecurityUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +26,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AuditAspect {
-    private final AuditLogRepository auditLogRepository;
-
     private  final SecurityUtility securityUtility;
+    private final AuditOutboxService auditOutboxService;
 
     @Around("@annotation(auditable)")
     public Object audit(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
@@ -38,7 +36,7 @@ public class AuditAspect {
             result = joinPoint.proceed();
         } catch (Throwable exception) {
             try {
-                saveAudit(auditable, AuditStatus.FAILURE, null, exception.getMessage());
+                saveAudit(auditable, AuditStatus.FAILURE, null, exception.getMessage(), true);
             } catch (Exception auditException) {
                 log.error("Failed to persist failure audit for {}", auditable.action(), auditException);
             }
@@ -46,7 +44,7 @@ public class AuditAspect {
         }
 
         try {
-            saveAudit(auditable, AuditStatus.SUCCESS, extractEntityId(result), null);
+            saveAudit(auditable, AuditStatus.SUCCESS, extractEntityId(result), null, false);
         } catch (Exception auditException) {
             log.error("Failed to persist success audit for {}", auditable.action(), auditException);
         }
@@ -67,27 +65,22 @@ public class AuditAspect {
         return null;
     }
 
-    private void saveAudit(Auditable auditable, AuditStatus auditStatus, UUID entityId, String errorMessage) {
-
-        AuditLog auditLog = AuditLog.builder()
-                .action(auditable.action())
-                .entityType(auditable.entity())
-                .entityId(entityId)
-                .status(auditStatus)
-                .errorMessage(errorMessage)
-                .ipAddress(getIpAddress())
-                .userAgent(getUserAgent())
-                .timestamp(Instant.now())
-                .build();
-
+    private void saveAudit(Auditable auditable, AuditStatus auditStatus, UUID entityId,
+                           String errorMessage, boolean failure) {
+        UUID userId;
         if(AuditAction.CREATE.equals(auditable.action()) && AuditEntityType.USER.equals(auditable.entity())) {
-            auditLog.setUserId(entityId);
+            userId = entityId;
         } else {
-            auditLog.setUserId(securityUtility.getCurrentUserId());
+            userId = securityUtility.getCurrentUserId();
         }
-
-        auditLogRepository.save(auditLog);
-
+        Instant timestamp = Instant.now();
+        if (failure) {
+            auditOutboxService.enqueueFailure(auditable.action(), auditable.entity(), entityId, userId,
+                    auditStatus, errorMessage, getIpAddress(), getUserAgent(), getRequestId(), timestamp);
+        } else {
+            auditOutboxService.enqueue(auditable.action(), auditable.entity(), entityId, userId,
+                    auditStatus, errorMessage, getIpAddress(), getUserAgent(), getRequestId(), timestamp);
+        }
     }
 
     private String getIpAddress() {
@@ -107,17 +100,22 @@ public class AuditAspect {
     }
 
     private String getUserAgent() {
-
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes)
                         RequestContextHolder.getRequestAttributes();
-
         if (attributes == null) {
             return null;
         }
-
         return attributes.getRequest()
                 .getHeader("User-Agent");
     }
 
+    private String getRequestId() {
+        ServletRequestAttributes attributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return null;
+        }
+        return attributes.getRequest().getHeader("X-Request-Id");
+    }
 }

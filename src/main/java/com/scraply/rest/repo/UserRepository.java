@@ -16,35 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID>, UserQueryRepository {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(@Email(message = "Invalid email address") @NotBlank(message = "Email is required") String email);
 
-    @Query("""
-        SELECT new com.scraply.rest.dto.user.PickerResponse(
-            u.id,
-            u.firstName,
-            u.lastName,
-            u.email,
-            u.phone,
-            u.address,
-            u.userRole,
-            u.pinCode,
-            u.vehicleType,
-            u.vehicleNumber,
-            u.pickUpRoute,
-            u.areaPinCode,
-            u.profileImage
-        )
-        FROM User u
-        WHERE u.userRole = UserRole.PICKER
-          AND u.status = :accountStatus
-          AND (:pinCode IS NULL OR u.areaPinCode = :pinCode)
-    """)
-    Page<UserResponse> findPickers(
-            @Param("accountStatus") AccountStatus accountStatus,
-            @Param("pinCode") Integer pinCode,
-            Pageable pageable
-    );
 }
